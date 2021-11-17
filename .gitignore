@@ -3,3 +3,7 @@
 ################################################################################
 
 /.vs/softsunlight.orm
+/softsunlight.orm/bin/Debug/netcoreapp3.0
+/softsunlight.orm/obj
+/softsunlight.orm.tests/bin/Debug/netcoreapp3.0
+/softsunlight.orm.tests/obj

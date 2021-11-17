@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30621.155
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "softsunlight.orm", "softsunlight.orm\softsunlight.orm.csproj", "{87FAFB45-7E0B-42CB-B493-6B817CF9DAB5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "softsunlight.orm.tests", "softsunlight.orm.tests\softsunlight.orm.tests.csproj", "{8EDB8F47-7AF5-4C4A-8AF8-8A768D290E69}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{87FAFB45-7E0B-42CB-B493-6B817CF9DAB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87FAFB45-7E0B-42CB-B493-6B817CF9DAB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87FAFB45-7E0B-42CB-B493-6B817CF9DAB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87FAFB45-7E0B-42CB-B493-6B817CF9DAB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EDB8F47-7AF5-4C4A-8AF8-8A768D290E69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EDB8F47-7AF5-4C4A-8AF8-8A768D290E69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EDB8F47-7AF5-4C4A-8AF8-8A768D290E69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EDB8F47-7AF5-4C4A-8AF8-8A768D290E69}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DCA4BF1B-722F-435E-B8F2-1AB42791BF00}
+	EndGlobalSection
+EndGlobal
