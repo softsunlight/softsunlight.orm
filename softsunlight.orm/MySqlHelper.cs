@@ -11,6 +11,21 @@ namespace softsunlight.orm
     /// </summary>
     public class MySqlHelper : ISqlHelper
     {
+        public MySqlHelper(string connectionStr)
+        {
 
+        }
+
+        public MySqlHelper(MySqlConnection sqlConnection)
+        {
+
+        }
+
+        public DataTable GetDataTable(string sql)
+        {
+            DataTable dt=null;
+
+            return dt;
+        }
     }
 }

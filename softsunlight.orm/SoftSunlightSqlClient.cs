@@ -30,7 +30,6 @@ namespace softsunlight.orm
 
         public SoftSunlightSqlClient(DbTypeEnum dbTypeEnum)
         {
-            //可以考虑使用池化技术
             //sqlHelper = DbConnectionFactory.GetDbConnection(dbTypeEnum);
         }
 
