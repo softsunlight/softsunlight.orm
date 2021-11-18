@@ -224,6 +224,56 @@ namespace softsunlight.orm
             return sqlBuilder.ToString();
         }
 
+        /// <summary>
+        /// 根据类型获取创建表的SQL语句
+        /// to do:现在是根据Mysql来创建表，不同的数据库创建表有点不同
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dbTypeEnum"></param>
+        /// <returns></returns>
+        public static string GetCreateTableSql<T>(DbTypeEnum dbTypeEnum)
+        {
+            StringBuilder sqlBuilder = new StringBuilder();
+            Type type = typeof(T);
+            if (type.IsGenericType)
+            {
+                throw new Exception("参数T不能为泛型集合");
+            }
+            string tableName = type.Name;
+            var attributes = type.GetCustomAttributes(typeof(TableAttribute), false);
+            if (attributes.Length > 0)
+            {
+                TableAttribute tableAttribute = (TableAttribute)attributes[0];
+                if (!string.IsNullOrEmpty(tableAttribute.TableName))
+                {
+                    tableName = tableAttribute.TableName;
+                }
+            }
+            PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
+            sqlBuilder.Append("CREATE TABLE ").Append(GetSafeName(dbTypeEnum, tableName)).Append("(").Append(Environment.NewLine);
+            string primaryKey = string.Empty;
+            foreach (PropertyInfo propertyInfo in propertyInfos)
+            {
+                if (propertyInfo.Name.Equals("Id", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    sqlBuilder.Append("\t").Append(GetSafeName(dbTypeEnum, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(dbTypeEnum, propertyInfo.PropertyType));
+                    if (propertyInfo.PropertyType == typeof(int) || propertyInfo.PropertyType == typeof(long))
+                    {
+                        sqlBuilder.Append(" AUTO_INCREMENT,");
+                    }
+                    sqlBuilder.Append(Environment.NewLine);
+                    primaryKey = "\tPRIMARY KEY (" + GetSafeName(dbTypeEnum, propertyInfo.Name) + ")";
+                }
+                else
+                {
+                    sqlBuilder.Append("\t").Append(GetSafeName(dbTypeEnum, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(dbTypeEnum, propertyInfo.PropertyType)).Append(",").Append(Environment.NewLine);
+                }
+            }
+            sqlBuilder.Append(primaryKey).Append(Environment.NewLine);
+            sqlBuilder.Append(")ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+            return sqlBuilder.ToString();
+        }
+
         private static string GetSafeName(DbTypeEnum dbTypeEnum, string name)
         {
             StringBuilder stringBuilder = new StringBuilder();

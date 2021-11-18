@@ -1,4 +1,5 @@
 ﻿using softsunlight.orm.Attributes;
+using softsunlight.orm.Enum;
 using System;
 using System.Collections.Generic;
 
@@ -12,6 +13,7 @@ namespace softsunlight.orm.tests
 
             //API
             var db = new SoftSunlightSqlClient("Data Source=127.0.0.1,");
+            ConvertToSql.GetCreateTableSql<Person>(DbTypeEnum.MySql);
             //db.Add(new Person() { Name = "wyb", Age = 26 });
             //db.Add(new List<Person>() { new Person() { Name = "wyb", Age = 26 } });
             List<Person> personList = new List<Person>();
