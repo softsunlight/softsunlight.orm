@@ -5,6 +5,7 @@ using softsunlight.orm.Utils;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
@@ -18,19 +19,26 @@ namespace softsunlight.orm
         /// <summary>
         /// 数据库操作类
         /// </summary>
-        private ISqlHelper sqlHelper;
+        private SqlHelper sqlHelper;
+
+        /// <summary>
+        /// 数据库类型
+        /// </summary>
+        private DbTypeEnum dbTypeEnum;
 
         /// <summary>
         /// 默认使用MySql数据库
         /// </summary>
-        public SoftSunlightSqlClient() : this(DbTypeEnum.MySql)
+        public SoftSunlightSqlClient(string connectionStr) : this(DbTypeEnum.MySql, connectionStr)
         {
 
         }
 
-        public SoftSunlightSqlClient(DbTypeEnum dbTypeEnum)
+        public SoftSunlightSqlClient(DbTypeEnum dbTypeEnum, string connectionStr)
         {
-            //sqlHelper = DbConnectionFactory.GetDbConnection(dbTypeEnum);
+            this.dbTypeEnum = dbTypeEnum;
+            sqlHelper = new SqlHelper(dbTypeEnum);
+            sqlHelper.SetConnectionStr(connectionStr);
         }
 
         /// <summary>
@@ -89,41 +97,13 @@ namespace softsunlight.orm
             else
             {
                 //非泛型类
-                string tableName = type.Name;
-                var attributes = type.GetCustomAttributes(typeof(TableAttribute), false);
-                if (attributes.Length > 0)
+                IList<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
+                string sql = ConvertToSql.GetInsertSql<T>(dbTypeEnum, entity, out dbDataParameters);
+                Log.Write(sql);
+                if (!string.IsNullOrEmpty(sql))
                 {
-                    TableAttribute tableAttribute = (TableAttribute)attributes[0];
-                    if (!string.IsNullOrEmpty(tableAttribute.TableName))
-                    {
-                        tableName = tableAttribute.TableName;
-                    }
+                    sqlHelper.ExecuteNoQuery(sql, dbDataParameters);
                 }
-                PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
-
-                StringBuilder sqlBuilder = new StringBuilder();
-                List<string> columnList = new List<string>();
-                List<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
-                sqlBuilder.Append("INSERT INTO `" + tableName + "`");
-                foreach (PropertyInfo propertyInfo in propertyInfos)
-                {
-                    object? value = propertyInfo.GetValue(entity);
-                    if (propertyInfo.Name.Equals("Id") && (value is int))
-                    {
-                        continue;
-                    }
-
-                    if (value != null)
-                    {
-                        columnList.Add("`" + propertyInfo.Name + "`");
-                        dbDataParameters.Add(new MySqlParameter("@" + propertyInfo.Name, value));
-                    }
-                }
-                sqlBuilder.Append("(" + string.Join(",", columnList) + ")").Append(" VALUES(" + string.Join(",", dbDataParameters.Select(p => p.ParameterName)) + ")");
-                //MySqlCommand cmd = new MySqlCommand(sqlBuilder.ToString(), (MySqlConnection)dbConnection);
-                Log.Write(sqlBuilder.ToString());
-                //cmd.Parameters.AddRange(dbDataParameters.ToArray());
-                //cmd.ExecuteNonQuery();
             }
         }
 
@@ -137,8 +117,8 @@ namespace softsunlight.orm
                 {
                     return;
                 }
-                var count = Convert.ToInt32(type.GetProperty("Count")?.GetValue(entity));
-                var itemProperty = type.GetProperty("Item");//索引器属性
+                var count = Convert.ToInt32(ReflectionHelper.GetPropertyInfo(type, "Item")?.GetValue(entity));
+                var itemProperty = ReflectionHelper.GetPropertyInfo(type, "Item");//索引器属性
                 string tableName = string.Empty;
                 PropertyInfo[] propertyInfos = null;
                 StringBuilder sqlBuilder = new StringBuilder();
@@ -177,34 +157,13 @@ namespace softsunlight.orm
             else
             {
                 //非泛型类
-                string tableName = type.Name;
-                var attributes = type.GetCustomAttributes(typeof(TableAttribute), false);
-                if (attributes.Length > 0)
+                IList<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
+                string sql = ConvertToSql.GetDeleteSql<T>(dbTypeEnum, entity, out dbDataParameters);
+                Log.Write(sql);
+                if (!string.IsNullOrEmpty(sql))
                 {
-                    TableAttribute tableAttribute = (TableAttribute)attributes[0];
-                    if (!string.IsNullOrEmpty(tableAttribute.TableName))
-                    {
-                        tableName = tableAttribute.TableName;
-                    }
+                    sqlHelper.ExecuteNoQuery(sql, dbDataParameters);
                 }
-                PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
-
-                StringBuilder sqlBuilder = new StringBuilder();
-                List<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
-                sqlBuilder.Append("DELETE FROM `" + tableName + "`");
-                foreach (PropertyInfo propertyInfo in propertyInfos)
-                {
-                    object? value = propertyInfo.GetValue(entity);
-                    if (propertyInfo.Name.Equals("Id") && (value is int))
-                    {
-                        sqlBuilder.Append(" WHERE Id=@Id;");
-                        dbDataParameters.Add(new MySqlParameter("@" + propertyInfo.Name, value));
-                    }
-                }
-                //MySqlCommand cmd = new MySqlCommand(sqlBuilder.ToString(), (MySqlConnection)dbConnection);
-                Log.Write(sqlBuilder.ToString());
-                //cmd.Parameters.AddRange(dbDataParameters.ToArray());
-                //cmd.ExecuteNonQuery();
             }
         }
 
@@ -266,42 +225,13 @@ namespace softsunlight.orm
             else
             {
                 //非泛型类
-                string tableName = type.Name;
-                var attributes = type.GetCustomAttributes(typeof(TableAttribute), false);
-                if (attributes.Length > 0)
+                IList<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
+                string sql = ConvertToSql.GetUpdateSql<T>(dbTypeEnum, entity, out dbDataParameters);
+                Log.Write(sql);
+                if (!string.IsNullOrEmpty(sql))
                 {
-                    TableAttribute tableAttribute = (TableAttribute)attributes[0];
-                    if (!string.IsNullOrEmpty(tableAttribute.TableName))
-                    {
-                        tableName = tableAttribute.TableName;
-                    }
+                    sqlHelper.ExecuteNoQuery(sql, dbDataParameters);
                 }
-                PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
-
-                StringBuilder sqlBuilder = new StringBuilder();
-                List<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
-                sqlBuilder.Append("UPDATE `" + tableName + "` SET");
-                foreach (PropertyInfo propertyInfo in propertyInfos)
-                {
-                    object? value = propertyInfo.GetValue(entity);
-                    if (propertyInfo.Name.Equals("Id") && (value is int))
-                    {
-                        sqlBuilder.Append(" WHERE Id=@Id;");
-                        dbDataParameters.Add(new MySqlParameter("@" + propertyInfo.Name, value));
-                    }
-                    else
-                    {
-                        if (value != null)
-                        {
-                            sqlBuilder.Append(" " + propertyInfo.Name + "=@" + propertyInfo.Name);
-                            dbDataParameters.Add(new MySqlParameter("@" + propertyInfo.Name, value));
-                        }
-                    }
-                }
-                //MySqlCommand cmd = new MySqlCommand(sqlBuilder.ToString(), (MySqlConnection)dbConnection);
-                Log.Write(sqlBuilder.ToString());
-                //cmd.Parameters.AddRange(dbDataParameters.ToArray());
-                //cmd.ExecuteNonQuery();
             }
         }
 
@@ -314,50 +244,14 @@ namespace softsunlight.orm
                 throw new Exception("参数entity不能是泛型集合");
             }
             //非泛型类
-            string tableName = type.Name;
-            var attributes = type.GetCustomAttributes(typeof(TableAttribute), false);
-            if (attributes.Length > 0)
+            IList<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
+            string sql = ConvertToSql.GetSelectSql<T>(dbTypeEnum, entity, out dbDataParameters);
+            Log.Write(sql);
+            if (!string.IsNullOrEmpty(sql))
             {
-                TableAttribute tableAttribute = (TableAttribute)attributes[0];
-                if (!string.IsNullOrEmpty(tableAttribute.TableName))
-                {
-                    tableName = tableAttribute.TableName;
-                }
+                DbDataReader dataReader = sqlHelper.GetDataReader(sql, dbDataParameters);
+                lists = ConvertToEntity.ConvertToList<T>(dataReader).ToList();
             }
-            PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
-
-            StringBuilder sqlBuilder = new StringBuilder();
-            List<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
-            sqlBuilder.Append("SELECT " + string.Join(",", propertyInfos.Select(p => "`" + p.Name + "`")) + " FROM `" + tableName + "` WHERE 1=1");
-            foreach (PropertyInfo propertyInfo in propertyInfos)
-            {
-                object? value = propertyInfo.GetValue(entity);
-                if (value != null)
-                {
-                    sqlBuilder.Append(" and " + propertyInfo.Name + "=@" + propertyInfo.Name);
-                    dbDataParameters.Add(new MySqlParameter("@" + propertyInfo.Name, value));
-                }
-            }
-            //MySqlCommand cmd = new MySqlCommand(sqlBuilder.ToString(), (MySqlConnection)dbConnection);
-            Log.Write(sqlBuilder.ToString());
-            //cmd.Parameters.AddRange(dbDataParameters.ToArray());
-            //MySqlDataReader mySqlDataReader = cmd.ExecuteReader();
-            //while (mySqlDataReader.Read())
-            //{
-            //    var obj = (T)Activator.CreateInstance(typeof(T));
-            //    for (int i = 0; i < mySqlDataReader.FieldCount; i++)
-            //    {
-            //        var value = mySqlDataReader.GetValue(i);
-            //        var columnType = mySqlDataReader[i].GetType();
-            //        PropertyInfo propertyInfo = obj.GetType().GetProperty(columnType.Name);
-            //        if (propertyInfo != null)
-            //        {
-            //            propertyInfo.SetValue(obj, value);
-            //        }
-            //    }
-            //    lists.Add(obj);
-            //}
-            //mySqlDataReader.Close();
             return lists;
         }
 
@@ -377,17 +271,32 @@ namespace softsunlight.orm
             pageModel = new PageModel();
         }
 
-        public object Get(string sql)
+        public object ExecuteScalar(string sql)
+        {
+            return ExecuteScalar(sql, null);
+        }
+
+        public object ExecuteScalar(string sql, params object[] sqlParams)
         {
             return 1;
         }
 
         public IEnumerable<T> Get<T>(string sql)
         {
+            return Get<T>(sql, null);
+        }
+
+        public IEnumerable<T> Get<T>(string sql, params object[] sqlParams)
+        {
             return (IEnumerable<T>)Activator.CreateInstance(typeof(T));
         }
 
-        public int ExecuteSql(string sql)
+        public int ExecuteNoQuery(string sql)
+        {
+            return ExecuteNoQuery(sql, null);
+        }
+
+        public int ExecuteNoQuery(string sql, params object[] sqlParams)
         {
             return 0;
         }

@@ -40,19 +40,19 @@ namespace softsunlight.orm
         /// 获取类型指定属性
         /// </summary>
         /// <param name="type"></param>
-        /// <param name="typeName"></param>
+        /// <param name="propertyName"></param>
         /// <returns></returns>
-        public static PropertyInfo GetPropertyInfo(Type type, string typeName)
+        public static PropertyInfo GetPropertyInfo(Type type, string propertyName)
         {
             if (!typePropertyName2Properties.ContainsKey(type.FullName))
             {
                 typePropertyName2Properties[type.FullName] = new Dictionary<string, PropertyInfo>();
             }
-            if (!typePropertyName2Properties[type.FullName].ContainsKey(typeName))
+            if (!typePropertyName2Properties[type.FullName].ContainsKey(propertyName))
             {
-                typePropertyName2Properties[type.FullName][typeName] = type.GetProperty(typeName);
+                typePropertyName2Properties[type.FullName][propertyName] = type.GetProperty(propertyName);
             }
-            return typePropertyName2Properties[type.FullName][typeName];
+            return typePropertyName2Properties[type.FullName][propertyName];
         }
 
         /// <summary>

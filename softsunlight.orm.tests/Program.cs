@@ -11,7 +11,7 @@ namespace softsunlight.orm.tests
             //自定义orm框架测试
 
             //API
-            var db = new SoftSunlightSqlClient();
+            var db = new SoftSunlightSqlClient("Data Source=127.0.0.1,");
             //db.Add(new Person() { Name = "wyb", Age = 26 });
             //db.Add(new List<Person>() { new Person() { Name = "wyb", Age = 26 } });
             List<Person> personList = new List<Person>();
@@ -34,7 +34,7 @@ namespace softsunlight.orm.tests
             //执行自定义sql
             object objResult = db.Get("");
             IEnumerable<Person> lists = db.Get<Person>("");
-            int result = db.ExecuteSql("");//执行增加、删除、更新语句
+            int result = db.ExecuteNoQuery("");//执行增加、删除、更新语句
         }
     }
 
