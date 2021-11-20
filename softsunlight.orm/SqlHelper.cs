@@ -1,11 +1,14 @@
 ﻿using MySql.Data.MySqlClient;
 using Oracle.ManagedDataAccess.Client;
 using softsunlight.orm.Enum;
+using softsunlight.orm.Utils;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Linq;
 
 namespace softsunlight.orm
@@ -22,10 +25,16 @@ namespace softsunlight.orm
         /// </summary>
         private DbTypeEnum dbTypeEnum;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private Stopwatch stopwatch;
+
         public SqlHelper(DbTypeEnum dbTypeEnum)
         {
             this.dbTypeEnum = dbTypeEnum;
             this.dbConnection = SqlUtils.GetDbConnection(dbTypeEnum);
+            this.stopwatch = new Stopwatch();
         }
 
         public void SetConnectionStr(string connectionStr)
@@ -40,14 +49,31 @@ namespace softsunlight.orm
 
         public DbDataReader GetDataReader(string sql, IList<IDbDataParameter> dbDataParameters)
         {
-            dbConnection.Open();
-            DbCommand mySqlCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
-            if (dbDataParameters != null && dbDataParameters.Count > 0)
+            DbDataReader dataReader = null;
+            try
             {
-                mySqlCommand.Parameters.AddRange(dbDataParameters.ToArray());
+                if (string.IsNullOrEmpty(sql))
+                {
+                    return dataReader;
+                }
+                dbConnection.Open();
+                DbCommand dbCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
+                dbCommand.Connection = (DbConnection)this.dbConnection;
+                if (dbDataParameters != null && dbDataParameters.Count > 0)
+                {
+                    dbCommand.Parameters.AddRange(dbDataParameters.ToArray());
+                }
+                stopwatch.Restart();
+                dataReader = dbCommand.ExecuteReader();
+                stopwatch.Stop();
+                Log.Write("执行Sql：" + sql + "耗时:" + stopwatch.Elapsed);
+                dbConnection.Close();
             }
-            DbDataReader dataReader = mySqlCommand.ExecuteReader();
-            dbConnection.Close();
+            catch (Exception ex)
+            {
+                Log.Write(ex.Message, ex);
+                throw ex;
+            }
             return dataReader;
         }
 
@@ -58,16 +84,31 @@ namespace softsunlight.orm
 
         public DataSet GetDataSet(string sql, IList<IDbDataParameter> dbDataParameters)
         {
-            DataSet dataSet = new DataSet();
-            DbDataAdapter mySqlDataAdapter = SqlUtils.GetDbDataAdapter(this.dbTypeEnum);
-            mySqlDataAdapter.SelectCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
-            mySqlDataAdapter.SelectCommand.CommandText = sql;
-            mySqlDataAdapter.SelectCommand.Connection = (DbConnection)this.dbConnection;
-            if (dbDataParameters != null && dbDataParameters.Count > 0)
+            DataSet dataSet = null;
+            try
             {
-                mySqlDataAdapter.SelectCommand.Parameters.AddRange(dbDataParameters.ToArray());
+                if (string.IsNullOrEmpty(sql))
+                {
+                    return dataSet;
+                }
+                DbDataAdapter dbDataAdapter = SqlUtils.GetDbDataAdapter(this.dbTypeEnum);
+                dbDataAdapter.SelectCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
+                dbDataAdapter.SelectCommand.CommandText = sql;
+                dbDataAdapter.SelectCommand.Connection = (DbConnection)this.dbConnection;
+                if (dbDataParameters != null && dbDataParameters.Count > 0)
+                {
+                    dbDataAdapter.SelectCommand.Parameters.AddRange(dbDataParameters.ToArray());
+                }
+                stopwatch.Restart();
+                dbDataAdapter.Fill(dataSet);
+                stopwatch.Stop();
+                Log.Write("执行Sql：" + sql + "耗时:" + stopwatch.Elapsed);
             }
-            mySqlDataAdapter.Fill(dataSet);
+            catch (Exception ex)
+            {
+                Log.Write(ex.Message, ex);
+                throw ex;
+            }
             return dataSet;
         }
 
@@ -79,17 +120,32 @@ namespace softsunlight.orm
         public DataTable GetDataTable(string sql, IList<IDbDataParameter> dbDataParameters)
         {
             DataTable dt = null;
-            DbDataAdapter mySqlDataAdapter = SqlUtils.GetDbDataAdapter(this.dbTypeEnum);
-            mySqlDataAdapter.SelectCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
-            mySqlDataAdapter.SelectCommand.CommandText = sql;
-            mySqlDataAdapter.SelectCommand.Connection = (DbConnection)this.dbConnection;
-            if (dbDataParameters != null && dbDataParameters.Count > 0)
+            try
             {
-                mySqlDataAdapter.SelectCommand.Parameters.AddRange(dbDataParameters.ToArray());
+                if (string.IsNullOrEmpty(sql))
+                {
+                    return dt;
+                }
+                DbDataAdapter dbDataAdapter = SqlUtils.GetDbDataAdapter(this.dbTypeEnum);
+                dbDataAdapter.SelectCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
+                dbDataAdapter.SelectCommand.CommandText = sql;
+                dbDataAdapter.SelectCommand.Connection = (DbConnection)this.dbConnection;
+                if (dbDataParameters != null && dbDataParameters.Count > 0)
+                {
+                    dbDataAdapter.SelectCommand.Parameters.AddRange(dbDataParameters.ToArray());
+                }
+                DataSet dataSet = new DataSet();
+                stopwatch.Restart();
+                dbDataAdapter.Fill(dataSet);
+                stopwatch.Stop();
+                Log.Write("执行Sql：" + sql + "耗时:" + stopwatch.Elapsed);
+                dt = dataSet.Tables[0];
             }
-            DataSet dataSet = new DataSet();
-            mySqlDataAdapter.Fill(dataSet);
-            dt = dataSet.Tables[0];
+            catch (Exception ex)
+            {
+                Log.Write(ex.Message, ex);
+                throw ex;
+            }
             return dt;
         }
 
@@ -100,16 +156,33 @@ namespace softsunlight.orm
 
         public object GetScalar(string sql, IList<IDbDataParameter> dbDataParameters)
         {
-            dbConnection.Open();
-            DbCommand mySqlCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
-            mySqlCommand.CommandText = sql;
-            if (dbDataParameters != null && dbDataParameters.Count > 0)
+            object objResult = null;
+            try
             {
-                mySqlCommand.Parameters.AddRange(dbDataParameters.ToArray());
+                if (string.IsNullOrEmpty(sql))
+                {
+                    return objResult;
+                }
+                dbConnection.Open();
+                DbCommand dbCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
+                dbCommand.CommandText = sql;
+                dbCommand.Connection = (DbConnection)this.dbConnection;
+                if (dbDataParameters != null && dbDataParameters.Count > 0)
+                {
+                    dbCommand.Parameters.AddRange(dbDataParameters.ToArray());
+                }
+                stopwatch.Restart();
+                objResult = dbCommand.ExecuteScalar();
+                stopwatch.Stop();
+                Log.Write("执行Sql：" + sql + "耗时:" + stopwatch.Elapsed);
+                dbConnection.Close();
             }
-            object obj = mySqlCommand.ExecuteScalar();
-            dbConnection.Close();
-            return obj;
+            catch (Exception ex)
+            {
+                Log.Write(ex.Message, ex);
+                throw ex;
+            }
+            return objResult;
         }
 
         public int ExecuteNoQuery(string sql)
@@ -119,15 +192,32 @@ namespace softsunlight.orm
 
         public int ExecuteNoQuery(string sql, IList<IDbDataParameter> dbDataParameters)
         {
-            dbConnection.Open();
-            DbCommand mySqlCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
-            mySqlCommand.CommandText = sql;
-            if (dbDataParameters != null && dbDataParameters.Count > 0)
+            int result = 0;
+            try
             {
-                mySqlCommand.Parameters.AddRange(dbDataParameters.ToArray());
+                if (string.IsNullOrEmpty(sql))
+                {
+                    return result;
+                }
+                dbConnection.Open();
+                DbCommand dbCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
+                dbCommand.CommandText = sql;
+                dbCommand.Connection = (DbConnection)this.dbConnection;
+                if (dbDataParameters != null && dbDataParameters.Count > 0)
+                {
+                    dbCommand.Parameters.AddRange(dbDataParameters.ToArray());
+                }
+                stopwatch.Restart();
+                result = dbCommand.ExecuteNonQuery();
+                stopwatch.Stop();
+                Log.Write("执行Sql：" + sql + "耗时:" + stopwatch.Elapsed);
+                dbConnection.Close();
             }
-            int result = mySqlCommand.ExecuteNonQuery();
-            dbConnection.Close();
+            catch (Exception ex)
+            {
+                Log.Write(ex.Message, ex);
+                throw ex;
+            }
             return result;
         }
 

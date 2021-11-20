@@ -25,7 +25,7 @@ namespace softsunlight.orm
         public static string GetInsertSql<T>(DbTypeEnum dbTypeEnum, T entity, out IList<IDbDataParameter> dbDataParameters)
         {
             StringBuilder sqlBuilder = new StringBuilder();
-            dbDataParameters = Array.Empty<IDbDataParameter>();
+            dbDataParameters = new List<IDbDataParameter>();
             Type type = typeof(T);
             if (type.IsGenericType)
             {
@@ -74,8 +74,8 @@ namespace softsunlight.orm
         public static string GetUpdateSql<T>(DbTypeEnum dbTypeEnum, T entity, out IList<IDbDataParameter> dbDataParameters)
         {
             StringBuilder sqlBuilder = new StringBuilder();
-            dbDataParameters = Array.Empty<IDbDataParameter>();
-            Type type = typeof(T);
+            dbDataParameters = new List<IDbDataParameter>();
+            Type type = entity.GetType();
             if (type.IsGenericType)
             {
                 return sqlBuilder.ToString();
@@ -96,17 +96,18 @@ namespace softsunlight.orm
             foreach (PropertyInfo propertyInfo in propertyInfos)
             {
                 object? value = propertyInfo.GetValue(entity);
+                Guid guid = Guid.NewGuid();
                 if (propertyInfo.Name.Equals("Id") && (value is int))
                 {
-                    sqlBuilder.Append(" WHERE Id=@Id;");
-                    dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name, value));
+                    sqlBuilder.Append(" WHERE Id=@Id_" + guid + ";");
+                    dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name + "_" + guid, value));
                 }
                 else
                 {
                     if (value != null)
                     {
-                        sqlBuilder.Append(" " + propertyInfo.Name + "=@" + propertyInfo.Name);
-                        dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name, value));
+                        sqlBuilder.Append(" " + propertyInfo.Name + "=@" + propertyInfo.Name + "_" + guid);
+                        dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name + "_" + guid, value));
                     }
                 }
             }
@@ -124,8 +125,8 @@ namespace softsunlight.orm
         public static string GetDeleteSql<T>(DbTypeEnum dbTypeEnum, T entity, out IList<IDbDataParameter> dbDataParameters)
         {
             StringBuilder sqlBuilder = new StringBuilder();
-            dbDataParameters = Array.Empty<IDbDataParameter>();
-            Type type = typeof(T);
+            dbDataParameters = new List<IDbDataParameter>();
+            Type type = entity.GetType();
             if (type.IsGenericType)
             {
                 return sqlBuilder.ToString();
@@ -147,8 +148,10 @@ namespace softsunlight.orm
                 object? value = propertyInfo.GetValue(entity);
                 if (propertyInfo.Name.Equals("Id") && (value is int))
                 {
-                    sqlBuilder.Append(" WHERE Id=@Id;");
-                    dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name, value));
+                    Guid guid = Guid.NewGuid();
+                    sqlBuilder.Append(" WHERE Id=@Id_" + guid + ";");
+                    dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name + "_" + guid, value));
+                    break;
                 }
             }
             return sqlBuilder.ToString();
@@ -179,7 +182,7 @@ namespace softsunlight.orm
         public static string GetSelectSql<T>(DbTypeEnum dbTypeEnum, T entity, out IList<IDbDataParameter> dbDataParameters, PageModel pageModel)
         {
             StringBuilder sqlBuilder = new StringBuilder();
-            dbDataParameters = Array.Empty<IDbDataParameter>();
+            dbDataParameters = new List<IDbDataParameter>();
             if (pageModel != null)
             {
                 if (pageModel.PageNo <= 0)
@@ -233,6 +236,19 @@ namespace softsunlight.orm
         /// <returns></returns>
         public static string GetCreateTableSql<T>(DbTypeEnum dbTypeEnum)
         {
+            switch (dbTypeEnum)
+            {
+                case DbTypeEnum.MySql:
+                    return GetMySqlCreateTableSql<T>();
+                case DbTypeEnum.SqlServer:
+                    return GetSqlServerCreateTableSql<T>();
+                default:
+                    return GetMySqlCreateTableSql<T>();
+            }
+        }
+
+        private static string GetMySqlCreateTableSql<T>()
+        {
             StringBuilder sqlBuilder = new StringBuilder();
             Type type = typeof(T);
             if (type.IsGenericType)
@@ -250,27 +266,69 @@ namespace softsunlight.orm
                 }
             }
             PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
-            sqlBuilder.Append("CREATE TABLE ").Append(GetSafeName(dbTypeEnum, tableName)).Append("(").Append(Environment.NewLine);
+            sqlBuilder.Append("CREATE TABLE ").Append(GetSafeName(DbTypeEnum.MySql, tableName)).Append("(").Append(Environment.NewLine);
             string primaryKey = string.Empty;
             foreach (PropertyInfo propertyInfo in propertyInfos)
             {
                 if (propertyInfo.Name.Equals("Id", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    sqlBuilder.Append("\t").Append(GetSafeName(dbTypeEnum, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(dbTypeEnum, propertyInfo.PropertyType));
+                    sqlBuilder.Append("\t").Append(GetSafeName(DbTypeEnum.MySql, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(DbTypeEnum.MySql, propertyInfo.PropertyType));
                     if (propertyInfo.PropertyType == typeof(int) || propertyInfo.PropertyType == typeof(long))
                     {
                         sqlBuilder.Append(" AUTO_INCREMENT,");
                     }
                     sqlBuilder.Append(Environment.NewLine);
-                    primaryKey = "\tPRIMARY KEY (" + GetSafeName(dbTypeEnum, propertyInfo.Name) + ")";
+                    primaryKey = "\tPRIMARY KEY (" + GetSafeName(DbTypeEnum.MySql, propertyInfo.Name) + ")";
                 }
                 else
                 {
-                    sqlBuilder.Append("\t").Append(GetSafeName(dbTypeEnum, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(dbTypeEnum, propertyInfo.PropertyType)).Append(",").Append(Environment.NewLine);
+                    sqlBuilder.Append("\t").Append(GetSafeName(DbTypeEnum.MySql, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(DbTypeEnum.MySql, propertyInfo.PropertyType)).Append(",").Append(Environment.NewLine);
                 }
             }
             sqlBuilder.Append(primaryKey).Append(Environment.NewLine);
             sqlBuilder.Append(")ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+            return sqlBuilder.ToString();
+        }
+
+        private static string GetSqlServerCreateTableSql<T>()
+        {
+            StringBuilder sqlBuilder = new StringBuilder();
+            Type type = typeof(T);
+            if (type.IsGenericType)
+            {
+                throw new Exception("参数T不能为泛型集合");
+            }
+            string tableName = type.Name;
+            var attributes = type.GetCustomAttributes(typeof(TableAttribute), false);
+            if (attributes.Length > 0)
+            {
+                TableAttribute tableAttribute = (TableAttribute)attributes[0];
+                if (!string.IsNullOrEmpty(tableAttribute.TableName))
+                {
+                    tableName = tableAttribute.TableName;
+                }
+            }
+            PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
+            sqlBuilder.Append("CREATE TABLE ").Append(GetSafeName(DbTypeEnum.SqlServer, tableName)).Append("(").Append(Environment.NewLine);
+            string primaryKey = string.Empty;
+            foreach (PropertyInfo propertyInfo in propertyInfos)
+            {
+                if (propertyInfo.Name.Equals("Id", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    sqlBuilder.Append("\t").Append(GetSafeName(DbTypeEnum.SqlServer, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(DbTypeEnum.SqlServer, propertyInfo.PropertyType)).Append(" PRIMARY KEY");
+                    if (propertyInfo.PropertyType == typeof(int) || propertyInfo.PropertyType == typeof(long))
+                    {
+                        sqlBuilder.Append(" IDENTITY (1, 1),");
+                    }
+                    sqlBuilder.Append(Environment.NewLine);
+                }
+                else
+                {
+                    sqlBuilder.Append("\t").Append(GetSafeName(DbTypeEnum.SqlServer, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(DbTypeEnum.SqlServer, propertyInfo.PropertyType)).Append(",").Append(Environment.NewLine);
+                }
+            }
+            sqlBuilder.Append(primaryKey).Append(Environment.NewLine);
+            sqlBuilder.Append(")");
             return sqlBuilder.ToString();
         }
 

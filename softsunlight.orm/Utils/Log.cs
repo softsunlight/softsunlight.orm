@@ -24,7 +24,7 @@ namespace softsunlight.orm.Utils
 
         public static void Write(string message)
         {
-            Write(message, null);
+            Write(message, new Exception());
         }
 
         public static void Write(string message, Exception ex)
@@ -54,9 +54,25 @@ namespace softsunlight.orm.Utils
                     }
                 }
                 fileName = DateTime.Today.ToString("yyyy-MM-dd") + "_log_" + maxIndex + ".txt";
-                Write(message, ex);
+                Write(message, fileLoadException);
             }
         }
+
+        //public static void Write(string fileName, string message)
+        //{
+        //    string oldFileName = Log.fileName;
+        //    Log.fileName = fileName;
+        //    Write(message, new Exception());
+        //    Log.fileName = oldFileName;
+        //}
+
+        //public static void Write(string fileName, string message, Exception ex)
+        //{
+        //    string oldFileName = Log.fileName;
+        //    Log.fileName = fileName;
+        //    Write(message, ex);
+        //    Log.fileName = oldFileName;
+        //}
 
         private static StringBuilder GetContent(string message, Exception ex)
         {

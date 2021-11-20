@@ -12,27 +12,28 @@ namespace softsunlight.orm.tests
             //自定义orm框架测试
 
             //API
-            var db = new SoftSunlightSqlClient("Data Source=127.0.0.1,");
-            ConvertToSql.GetCreateTableSql<Person>(DbTypeEnum.MySql);
-            //db.Add(new Person() { Name = "wyb", Age = 26 });
+            var db = new SoftSunlightSqlClient(DbTypeEnum.SqlServer, "Data Source=(local);Initial Catalog=testDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+            //ConvertToSql.GetCreateTableSql<Person>(DbTypeEnum.MySql);
+            db.Add(new Person() { Name = "wyb", Age = 26 });
             //db.Add(new List<Person>() { new Person() { Name = "wyb", Age = 26 } });
             List<Person> personList = new List<Person>();
             for (int i = 0; i < 10; i++)
             {
                 personList.Add(new Person() { Name = "wyb_" + i, Age = 16 + i });
             }
-            db.Add(personList);
-            db.Delete(new Person());
-            db.Delete(new List<Person>());
+
+            //db.Add(personList);
+            //db.Delete(new Person());
+            //db.Delete(personList);
             db.Update(new Person());
             db.Update(new List<Person>());
             //单表查询
             db.Get(new Person());
             PageModel pageModel = new PageModel();
-            db.Get(new Person(), out pageModel);
+            db.Get(new Person(), pageModel);
             //连接查询
             db.Get(new Person(), new Course());
-            db.Get(new Person(), new Course(), out pageModel);
+            db.Get(new Person(), new Course(), pageModel);
             //执行自定义sql
             object objResult = db.Get("");
             IEnumerable<Person> lists = db.Get<Person>("");

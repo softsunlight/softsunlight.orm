@@ -8,6 +8,7 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.SQLite;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace softsunlight.orm
 {
@@ -104,6 +105,16 @@ namespace softsunlight.orm
                 default:
                     return new MySqlParameter(paramName, value);
             }
+        }
+
+        /// <summary>
+        /// 过滤操作数据库的语句
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string GetSqlSafeSqlParamValue(string value)
+        {
+            return Regex.Replace(value, @"(?is)CREATE|UPDATE|EXECUTE|GRANT|REVOKE|DROP|DELETE|ALTER", "");
         }
 
     }

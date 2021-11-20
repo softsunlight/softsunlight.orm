@@ -56,8 +56,8 @@ namespace softsunlight.orm
                 {
                     return;
                 }
-                var count = Convert.ToInt32(type.GetProperty("Count")?.GetValue(entity));
-                var itemProperty = type.GetProperty("Item");//索引器属性
+                var count = Convert.ToInt32(ReflectionHelper.GetPropertyInfo(type, "Count")?.GetValue(entity));
+                var itemProperty = ReflectionHelper.GetPropertyInfo(type, "Item");//索引器属性
                 string tableName = string.Empty;
                 PropertyInfo[] propertyInfos = null;
                 StringBuilder sqlBuilder = new StringBuilder();
@@ -88,18 +88,20 @@ namespace softsunlight.orm
                         {
                             continue;
                         }
-                        dbDataParameters.Add(new MySqlParameter("@" + propertyInfo.Name + "_" + i, value));
+                        dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name + "_" + i, value));
                     }
                     sqlBuilder.Append("(" + string.Join(",", propertyInfos.Select(p => "@" + p.Name + "_" + i)) + ")").Append("\r\n");
                 }
-                Log.Write(sqlBuilder.ToString());
+                if (sqlBuilder.Length > 0)
+                {
+                    sqlHelper.ExecuteNoQuery(sqlBuilder.ToString(), dbDataParameters);
+                }
             }
             else
             {
                 //非泛型类
                 IList<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
                 string sql = ConvertToSql.GetInsertSql<T>(dbTypeEnum, entity, out dbDataParameters);
-                Log.Write(sql);
                 if (!string.IsNullOrEmpty(sql))
                 {
                     sqlHelper.ExecuteNoQuery(sql, dbDataParameters);
@@ -117,49 +119,27 @@ namespace softsunlight.orm
                 {
                     return;
                 }
-                var count = Convert.ToInt32(ReflectionHelper.GetPropertyInfo(type, "Item")?.GetValue(entity));
+                var count = Convert.ToInt32(ReflectionHelper.GetPropertyInfo(type, "Count")?.GetValue(entity));
                 var itemProperty = ReflectionHelper.GetPropertyInfo(type, "Item");//索引器属性
-                string tableName = string.Empty;
-                PropertyInfo[] propertyInfos = null;
                 StringBuilder sqlBuilder = new StringBuilder();
                 List<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
                 for (var i = 0; i < count; i++)
                 {
                     var obj = itemProperty.GetValue(entity, new object[] { i });
-                    if (i == 0)
-                    {
-                        Type instanceType = obj.GetType();
-                        tableName = instanceType.Name;
-                        var attributes = instanceType.GetCustomAttributes(typeof(TableAttribute), false);
-                        if (attributes.Length > 0)
-                        {
-                            TableAttribute tableAttribute = (TableAttribute)attributes[0];
-                            if (!string.IsNullOrEmpty(tableAttribute.TableName))
-                            {
-                                tableName = tableAttribute.TableName;
-                            }
-                        }
-                        propertyInfos = ReflectionHelper.GetPropertyInfos(instanceType);
-                    }
-                    sqlBuilder.Append("DELETE FROM `" + tableName + "`");
-                    foreach (PropertyInfo propertyInfo in propertyInfos)
-                    {
-                        object? value = propertyInfo.GetValue(obj);
-                        if (propertyInfo.Name.Equals("Id") && (value is int))
-                        {
-                            sqlBuilder.Append(" WHERE Id=@Id_" + i + ";");
-                            dbDataParameters.Add(new MySqlParameter("@" + propertyInfo.Name + "_" + i, value));
-                        }
-                    }
+                    IList<IDbDataParameter> tempDbDataParameters = new List<IDbDataParameter>();
+                    sqlBuilder.Append(ConvertToSql.GetDeleteSql(dbTypeEnum, obj, out tempDbDataParameters));
+                    dbDataParameters.AddRange(tempDbDataParameters);
                 }
-                Log.Write(sqlBuilder.ToString());
+                if (sqlBuilder.Length > 0)
+                {
+                    sqlHelper.ExecuteNoQuery(sqlBuilder.ToString(), dbDataParameters);
+                }
             }
             else
             {
                 //非泛型类
                 IList<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
                 string sql = ConvertToSql.GetDeleteSql<T>(dbTypeEnum, entity, out dbDataParameters);
-                Log.Write(sql);
                 if (!string.IsNullOrEmpty(sql))
                 {
                     sqlHelper.ExecuteNoQuery(sql, dbDataParameters);
@@ -177,57 +157,27 @@ namespace softsunlight.orm
                 {
                     return;
                 }
-                var count = Convert.ToInt32(type.GetProperty("Count")?.GetValue(entity));
-                var itemProperty = type.GetProperty("Item");//索引器属性
-                string tableName = string.Empty;
-                PropertyInfo[] propertyInfos = null;
+                var count = Convert.ToInt32(ReflectionHelper.GetPropertyInfo(type, "Count")?.GetValue(entity));
+                var itemProperty = ReflectionHelper.GetPropertyInfo(type, "Item");//索引器属性
                 StringBuilder sqlBuilder = new StringBuilder();
                 List<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
                 for (var i = 0; i < count; i++)
                 {
                     var obj = itemProperty.GetValue(entity, new object[] { i });
-                    if (i == 0)
-                    {
-                        Type instanceType = obj.GetType();
-                        tableName = instanceType.Name;
-                        var attributes = instanceType.GetCustomAttributes(typeof(TableAttribute), false);
-                        if (attributes.Length > 0)
-                        {
-                            TableAttribute tableAttribute = (TableAttribute)attributes[0];
-                            if (!string.IsNullOrEmpty(tableAttribute.TableName))
-                            {
-                                tableName = tableAttribute.TableName;
-                            }
-                        }
-                        propertyInfos = ReflectionHelper.GetPropertyInfos(instanceType);
-                    }
-                    sqlBuilder.Append("UPDATE `" + tableName + "` SET");
-                    foreach (PropertyInfo propertyInfo in propertyInfos)
-                    {
-                        object? value = propertyInfo.GetValue(obj);
-                        if (propertyInfo.Name.Equals("Id") && (value is int))
-                        {
-                            sqlBuilder.Append(" WHERE Id=@Id_" + i + ";");
-                            dbDataParameters.Add(new MySqlParameter("@" + propertyInfo.Name + "_" + i, value));
-                        }
-                        else
-                        {
-                            if (value != null)
-                            {
-                                sqlBuilder.Append(" " + propertyInfo.Name + "=@" + propertyInfo.Name + "_" + i);
-                                dbDataParameters.Add(new MySqlParameter("@" + propertyInfo.Name + "_" + i, value));
-                            }
-                        }
-                    }
+                    IList<IDbDataParameter> tempDbDataParameters = new List<IDbDataParameter>();
+                    sqlBuilder.Append(ConvertToSql.GetUpdateSql(dbTypeEnum, obj, out tempDbDataParameters));
+                    dbDataParameters.AddRange(tempDbDataParameters);
                 }
-                Log.Write(sqlBuilder.ToString());
+                if (sqlBuilder.Length > 0)
+                {
+                    sqlHelper.ExecuteNoQuery(sqlBuilder.ToString(), dbDataParameters);
+                }
             }
             else
             {
                 //非泛型类
                 IList<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
                 string sql = ConvertToSql.GetUpdateSql<T>(dbTypeEnum, entity, out dbDataParameters);
-                Log.Write(sql);
                 if (!string.IsNullOrEmpty(sql))
                 {
                     sqlHelper.ExecuteNoQuery(sql, dbDataParameters);
@@ -237,6 +187,11 @@ namespace softsunlight.orm
 
         public IEnumerable<T> Get<T>(T entity)
         {
+            return Get(entity, null);
+        }
+
+        public IEnumerable<T> Get<T>(T entity, PageModel pageModel)
+        {
             IList<T> lists = new List<T>();
             Type type = typeof(T);
             if (type.IsGenericType)
@@ -245,8 +200,7 @@ namespace softsunlight.orm
             }
             //非泛型类
             IList<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
-            string sql = ConvertToSql.GetSelectSql<T>(dbTypeEnum, entity, out dbDataParameters);
-            Log.Write(sql);
+            string sql = ConvertToSql.GetSelectSql<T>(dbTypeEnum, entity, out dbDataParameters, pageModel);
             if (!string.IsNullOrEmpty(sql))
             {
                 DbDataReader dataReader = sqlHelper.GetDataReader(sql, dbDataParameters);
@@ -255,18 +209,12 @@ namespace softsunlight.orm
             return lists;
         }
 
-        public void Get<T>(T entity, out PageModel pageModel)
-        {
-            PageModel pageModel1 = new PageModel();
-            pageModel = pageModel1;
-        }
-
         public void Get<T1, T2>(T1 entity1, T2 entity2)
         {
 
         }
 
-        public void Get<T1, T2>(T1 entity1, T2 entity2, out PageModel pageModel)
+        public void Get<T1, T2>(T1 entity1, T2 entity2, PageModel pageModel)
         {
             pageModel = new PageModel();
         }
