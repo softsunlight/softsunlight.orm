@@ -4,6 +4,9 @@ using System.Text;
 
 namespace softsunlight.orm.Attributes
 {
+    /// <summary>
+    /// 为实体指定表名
+    /// </summary>
     public class TableAttribute : Attribute
     {
         public TableAttribute()
@@ -16,6 +19,9 @@ namespace softsunlight.orm.Attributes
             TableName = tableName;
         }
 
+        /// <summary>
+        /// 数据库表名
+        /// </summary>
         public string TableName { get; set; }
 
     }

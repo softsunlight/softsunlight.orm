@@ -29,18 +29,9 @@ namespace softsunlight.orm
             Type type = typeof(T);
             if (type.IsGenericType)
             {
-                return sqlBuilder.ToString();
+                return GetBatchInsertSql(dbTypeEnum, entity, out dbDataParameters);
             }
-            string tableName = type.Name;
-            var attributes = type.GetCustomAttributes(typeof(TableAttribute), false);
-            if (attributes.Length > 0)
-            {
-                TableAttribute tableAttribute = (TableAttribute)attributes[0];
-                if (!string.IsNullOrEmpty(tableAttribute.TableName))
-                {
-                    tableName = tableAttribute.TableName;
-                }
-            }
+            string tableName = GetTableName(type);
             PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
 
             List<string> columnList = new List<string>();
@@ -63,6 +54,51 @@ namespace softsunlight.orm
             return sqlBuilder.ToString();
         }
 
+        private static string GetBatchInsertSql<T>(DbTypeEnum dbTypeEnum, T entity, out IList<IDbDataParameter> dbDataParameters)
+        {
+            dbDataParameters = new List<IDbDataParameter>();
+            Type type = typeof(T);
+            //泛型集合
+            if (type.GenericTypeArguments.Length <= 0)
+            {
+                return string.Empty;
+            }
+            var count = Convert.ToInt32(ReflectionHelper.GetPropertyInfo(type, "Count")?.GetValue(entity));
+            var itemProperty = ReflectionHelper.GetPropertyInfo(type, "Item");//索引器属性
+            string tableName = string.Empty;
+            PropertyInfo[] propertyInfos = null;
+            StringBuilder sqlBuilder = new StringBuilder();
+            for (var i = 0; i < count; i++)
+            {
+                var obj = itemProperty.GetValue(entity, new object[] { i });
+                if (i == 0)
+                {
+                    Type instanceType = obj.GetType();
+                    tableName = GetTableName(instanceType);
+                    propertyInfos = ReflectionHelper.GetPropertyInfos(instanceType);
+                    sqlBuilder.Append("INSERT INTO " + GetSafeName(dbTypeEnum, tableName) + "(" + string.Join(",", propertyInfos.Where(p => !p.Name.Equals("Id")).Select(p => GetSafeName(dbTypeEnum, p.Name))) + ")").Append(" VALUES");
+                }
+                foreach (PropertyInfo propertyInfo in propertyInfos)
+                {
+                    object? value = propertyInfo.GetValue(obj);
+                    if (propertyInfo.Name.Equals("Id") && (value is int))
+                    {
+                        continue;
+                    }
+                    dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name + "_" + i, value));
+                }
+                if (i != count - 1)
+                {
+                    sqlBuilder.Append("(" + string.Join(",", propertyInfos.Where(p => !p.Name.Equals("Id")).Select(p => "@" + p.Name + "_" + i)) + ")").Append(",");
+                }
+                else
+                {
+                    sqlBuilder.Append("(" + string.Join(",", propertyInfos.Where(p => !p.Name.Equals("Id")).Select(p => "@" + p.Name + "_" + i)) + ")").Append(";");
+                }
+            }
+            return sqlBuilder.ToString();
+        }
+
         /// <summary>
         /// 将实体转换为更新语句
         /// </summary>
@@ -80,16 +116,7 @@ namespace softsunlight.orm
             {
                 return sqlBuilder.ToString();
             }
-            string tableName = type.Name;
-            var attributes = type.GetCustomAttributes(typeof(TableAttribute), false);
-            if (attributes.Length > 0)
-            {
-                TableAttribute tableAttribute = (TableAttribute)attributes[0];
-                if (!string.IsNullOrEmpty(tableAttribute.TableName))
-                {
-                    tableName = tableAttribute.TableName;
-                }
-            }
+            string tableName = GetTableName(type);
             PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
 
             sqlBuilder.Append("UPDATE " + GetSafeName(dbTypeEnum, tableName) + " SET");
@@ -131,16 +158,7 @@ namespace softsunlight.orm
             {
                 return sqlBuilder.ToString();
             }
-            string tableName = type.Name;
-            var attributes = type.GetCustomAttributes(typeof(TableAttribute), false);
-            if (attributes.Length > 0)
-            {
-                TableAttribute tableAttribute = (TableAttribute)attributes[0];
-                if (!string.IsNullOrEmpty(tableAttribute.TableName))
-                {
-                    tableName = tableAttribute.TableName;
-                }
-            }
+            string tableName = GetTableName(type);
             PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
             sqlBuilder.Append("DELETE FROM ").Append(GetSafeName(dbTypeEnum, tableName));
             foreach (PropertyInfo propertyInfo in propertyInfos)
@@ -199,18 +217,9 @@ namespace softsunlight.orm
             {
                 return sqlBuilder.ToString();
             }
-            string tableName = type.Name;
-            var attributes = type.GetCustomAttributes(typeof(TableAttribute), false);
-            if (attributes.Length > 0)
-            {
-                TableAttribute tableAttribute = (TableAttribute)attributes[0];
-                if (!string.IsNullOrEmpty(tableAttribute.TableName))
-                {
-                    tableName = tableAttribute.TableName;
-                }
-            }
+            string tableName = GetTableName(type);
             PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
-            sqlBuilder.Append("SELECT " + string.Join(",", propertyInfos.Select(p => "`" + p.Name + "`")) + " FROM " + GetSafeName(dbTypeEnum, tableName) + " WHERE 1=1");
+            sqlBuilder.Append("SELECT " + string.Join(",", propertyInfos.Select(p => GetSafeName(dbTypeEnum, p.Name))) + " FROM " + GetSafeName(dbTypeEnum, tableName) + " WHERE 1=1");
             foreach (PropertyInfo propertyInfo in propertyInfos)
             {
                 object? value = propertyInfo.GetValue(entity);
@@ -225,6 +234,27 @@ namespace softsunlight.orm
                 sqlBuilder.Append(" limit " + (pageModel.PageNo - 1) * pageModel.PageSize + ",").Append(pageModel.PageSize);
             }
             return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// 获取类型数据库表名
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private static string GetTableName(Type type)
+        {
+            string tableName = type.Name;
+            var attributes = type.GetCustomAttributes(typeof(TableAttribute), false);
+            if (attributes.Length > 0)
+            {
+                TableAttribute tableAttribute = (TableAttribute)attributes[0];
+                if (!string.IsNullOrEmpty(tableAttribute.TableName))
+                {
+                    tableName = tableAttribute.TableName;
+                }
+            }
+
+            return tableName;
         }
 
         /// <summary>
@@ -255,16 +285,7 @@ namespace softsunlight.orm
             {
                 throw new Exception("参数T不能为泛型集合");
             }
-            string tableName = type.Name;
-            var attributes = type.GetCustomAttributes(typeof(TableAttribute), false);
-            if (attributes.Length > 0)
-            {
-                TableAttribute tableAttribute = (TableAttribute)attributes[0];
-                if (!string.IsNullOrEmpty(tableAttribute.TableName))
-                {
-                    tableName = tableAttribute.TableName;
-                }
-            }
+            string tableName = GetTableName(type);
             PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
             sqlBuilder.Append("CREATE TABLE ").Append(GetSafeName(DbTypeEnum.MySql, tableName)).Append("(").Append(Environment.NewLine);
             string primaryKey = string.Empty;
@@ -298,16 +319,7 @@ namespace softsunlight.orm
             {
                 throw new Exception("参数T不能为泛型集合");
             }
-            string tableName = type.Name;
-            var attributes = type.GetCustomAttributes(typeof(TableAttribute), false);
-            if (attributes.Length > 0)
-            {
-                TableAttribute tableAttribute = (TableAttribute)attributes[0];
-                if (!string.IsNullOrEmpty(tableAttribute.TableName))
-                {
-                    tableName = tableAttribute.TableName;
-                }
-            }
+            string tableName = GetTableName(type);
             PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
             sqlBuilder.Append("CREATE TABLE ").Append(GetSafeName(DbTypeEnum.SqlServer, tableName)).Append("(").Append(Environment.NewLine);
             string primaryKey = string.Empty;

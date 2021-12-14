@@ -58,43 +58,23 @@ namespace softsunlight.orm
                 }
                 var count = Convert.ToInt32(ReflectionHelper.GetPropertyInfo(type, "Count")?.GetValue(entity));
                 var itemProperty = ReflectionHelper.GetPropertyInfo(type, "Item");//索引器属性
-                string tableName = string.Empty;
-                PropertyInfo[] propertyInfos = null;
-                StringBuilder sqlBuilder = new StringBuilder();
-                List<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
-                for (var i = 0; i < count; i++)
+                IList<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
+                int eachCount = 500;//每次插入的数据条数
+                List<object> list = new List<object>();
+                for (var i = 1; i <= count; i++)
                 {
-                    var obj = itemProperty.GetValue(entity, new object[] { i });
-                    if (i == 0)
+                    var obj = itemProperty.GetValue(entity, new object[] { i - 1 });
+                    list.Add(obj);
+                    if (i % eachCount == 0 || i >= count)
                     {
-                        Type instanceType = obj.GetType();
-                        tableName = instanceType.Name;
-                        var attributes = instanceType.GetCustomAttributes(typeof(TableAttribute), false);
-                        if (attributes.Length > 0)
+                        string sql = ConvertToSql.GetInsertSql(dbTypeEnum, list, out dbDataParameters);
+                        if (!string.IsNullOrEmpty(sql))
                         {
-                            TableAttribute tableAttribute = (TableAttribute)attributes[0];
-                            if (!string.IsNullOrEmpty(tableAttribute.TableName))
-                            {
-                                tableName = tableAttribute.TableName;
-                            }
+                            sqlHelper.ExecuteNoQuery(sql, dbDataParameters);
                         }
-                        propertyInfos = ReflectionHelper.GetPropertyInfos(instanceType);
-                        sqlBuilder.Append("INSERT INTO `" + tableName + "`(" + string.Join(",", propertyInfos.Select(p => "`" + p.Name + "`")) + ")").Append(" VALUES");
+                        dbDataParameters = new List<IDbDataParameter>();
+                        list = new List<object>();
                     }
-                    foreach (PropertyInfo propertyInfo in propertyInfos)
-                    {
-                        object? value = propertyInfo.GetValue(obj);
-                        if (propertyInfo.Name.Equals("Id") && (value is int))
-                        {
-                            continue;
-                        }
-                        dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name + "_" + i, value));
-                    }
-                    sqlBuilder.Append("(" + string.Join(",", propertyInfos.Select(p => "@" + p.Name + "_" + i)) + ")").Append("\r\n");
-                }
-                if (sqlBuilder.Length > 0)
-                {
-                    sqlHelper.ExecuteNoQuery(sqlBuilder.ToString(), dbDataParameters);
                 }
             }
             else

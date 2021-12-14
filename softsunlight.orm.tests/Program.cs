@@ -12,17 +12,17 @@ namespace softsunlight.orm.tests
             //自定义orm框架测试
 
             //API
-            var db = new SoftSunlightSqlClient(DbTypeEnum.SqlServer, "Data Source=(local);Initial Catalog=testDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+            var db = new SoftSunlightSqlClient(DbTypeEnum.MySql, "Server=127.0.0.1;Database=test;uid=root;pwd=123456;Charset=utf8;SslMode = none;");
             //ConvertToSql.GetCreateTableSql<Person>(DbTypeEnum.MySql);
-            db.Add(new Person() { Name = "wyb", Age = 26 });
+            //db.Add(new Person() { Name = "wyb", Age = 26 });
             //db.Add(new List<Person>() { new Person() { Name = "wyb", Age = 26 } });
             List<Person> personList = new List<Person>();
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 500000; i++)
             {
                 personList.Add(new Person() { Name = "wyb_" + i, Age = 16 + i });
             }
 
-            //db.Add(personList);
+            db.Add(personList);
             //db.Delete(new Person());
             //db.Delete(personList);
             db.Update(new Person());
