@@ -59,7 +59,7 @@ namespace softsunlight.orm
                 var count = Convert.ToInt32(ReflectionHelper.GetPropertyInfo(type, "Count")?.GetValue(entity));
                 var itemProperty = ReflectionHelper.GetPropertyInfo(type, "Item");//索引器属性
                 IList<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
-                int eachCount = 500;//每次插入的数据条数
+                int eachCount = 500;//每次处理的数据条数
                 List<object> list = new List<object>();
                 for (var i = 1; i <= count; i++)
                 {
@@ -102,17 +102,23 @@ namespace softsunlight.orm
                 var count = Convert.ToInt32(ReflectionHelper.GetPropertyInfo(type, "Count")?.GetValue(entity));
                 var itemProperty = ReflectionHelper.GetPropertyInfo(type, "Item");//索引器属性
                 StringBuilder sqlBuilder = new StringBuilder();
-                List<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
-                for (var i = 0; i < count; i++)
+                IList<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
+                int eachCount = 500;//每次处理的数据条数
+                List<object> list = new List<object>();
+                for (var i = 1; i <= count; i++)
                 {
-                    var obj = itemProperty.GetValue(entity, new object[] { i });
-                    IList<IDbDataParameter> tempDbDataParameters = new List<IDbDataParameter>();
-                    sqlBuilder.Append(ConvertToSql.GetDeleteSql(dbTypeEnum, obj, out tempDbDataParameters));
-                    dbDataParameters.AddRange(tempDbDataParameters);
-                }
-                if (sqlBuilder.Length > 0)
-                {
-                    sqlHelper.ExecuteNoQuery(sqlBuilder.ToString(), dbDataParameters);
+                    var obj = itemProperty.GetValue(entity, new object[] { i - 1 });
+                    list.Add(obj);
+                    if (i % eachCount == 0 || i >= count)
+                    {
+                        string sql = ConvertToSql.GetDeleteSql(dbTypeEnum, list, out dbDataParameters);
+                        if (!string.IsNullOrEmpty(sql))
+                        {
+                            sqlHelper.ExecuteNoQuery(sql, dbDataParameters);
+                        }
+                        dbDataParameters = new List<IDbDataParameter>();
+                        list = new List<object>();
+                    }
                 }
             }
             else
@@ -141,16 +147,24 @@ namespace softsunlight.orm
                 var itemProperty = ReflectionHelper.GetPropertyInfo(type, "Item");//索引器属性
                 StringBuilder sqlBuilder = new StringBuilder();
                 List<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
+                int eachCount = 500;//每次处理的数据条数
+                List<object> list = new List<object>();
                 for (var i = 0; i < count; i++)
                 {
                     var obj = itemProperty.GetValue(entity, new object[] { i });
-                    IList<IDbDataParameter> tempDbDataParameters = new List<IDbDataParameter>();
-                    sqlBuilder.Append(ConvertToSql.GetUpdateSql(dbTypeEnum, obj, out tempDbDataParameters));
-                    dbDataParameters.AddRange(tempDbDataParameters);
-                }
-                if (sqlBuilder.Length > 0)
-                {
-                    sqlHelper.ExecuteNoQuery(sqlBuilder.ToString(), dbDataParameters);
+                    list.Add(obj);
+                    if (i % eachCount == 0 || i >= count)
+                    {
+                        IList<IDbDataParameter> tempDbDataParameters = new List<IDbDataParameter>();
+                        sqlBuilder.Append(ConvertToSql.GetUpdateSql(dbTypeEnum, obj, out tempDbDataParameters));
+                        dbDataParameters.AddRange(tempDbDataParameters);
+                        if (sqlBuilder.Length > 0)
+                        {
+                            sqlHelper.ExecuteNoQuery(sqlBuilder.ToString(), dbDataParameters);
+                        }
+                        dbDataParameters = new List<IDbDataParameter>();
+                        list = new List<object>();
+                    }
                 }
             }
             else
@@ -226,7 +240,15 @@ namespace softsunlight.orm
 
         public int ExecuteNoQuery(string sql, params object[] sqlParams)
         {
-            return 0;
+            IList<IDbDataParameter> parameters = new List<IDbDataParameter>();
+            if (sqlParams != null)
+            {
+                foreach (object obj in sqlParams)
+                {
+                    parameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, obj.ToString(), obj));
+                }
+            }
+            return sqlHelper.ExecuteNoQuery(sql, parameters);
         }
 
     }

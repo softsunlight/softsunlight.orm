@@ -54,6 +54,14 @@ namespace softsunlight.orm
             return sqlBuilder.ToString();
         }
 
+        /// <summary>
+        /// 批量插入
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dbTypeEnum"></param>
+        /// <param name="entity"></param>
+        /// <param name="dbDataParameters"></param>
+        /// <returns></returns>
         private static string GetBatchInsertSql<T>(DbTypeEnum dbTypeEnum, T entity, out IList<IDbDataParameter> dbDataParameters)
         {
             dbDataParameters = new List<IDbDataParameter>();
@@ -156,7 +164,7 @@ namespace softsunlight.orm
             Type type = entity.GetType();
             if (type.IsGenericType)
             {
-                return sqlBuilder.ToString();
+                return GetBatchBatchDeleteSql(dbTypeEnum, entity, out dbDataParameters);
             }
             string tableName = GetTableName(type);
             PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
@@ -172,6 +180,57 @@ namespace softsunlight.orm
                     break;
                 }
             }
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// 将实体转换为批量删除语句
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dbTypeEnum"></param>
+        /// <param name="entity"></param>
+        /// <param name="dbDataParameters"></param>
+        /// <returns></returns>
+        private static string GetBatchBatchDeleteSql<T>(DbTypeEnum dbTypeEnum, T entity, out IList<IDbDataParameter> dbDataParameters)
+        {
+            dbDataParameters = new List<IDbDataParameter>();
+            Type type = typeof(T);
+            //泛型集合
+            if (type.GenericTypeArguments.Length <= 0)
+            {
+                return string.Empty;
+            }
+            var count = Convert.ToInt32(ReflectionHelper.GetPropertyInfo(type, "Count")?.GetValue(entity));
+            var itemProperty = ReflectionHelper.GetPropertyInfo(type, "Item");//索引器属性
+            string tableName = string.Empty;
+            PropertyInfo[] propertyInfos = null;
+            StringBuilder sqlBuilder = new StringBuilder();
+            for (var i = 0; i < count; i++)
+            {
+                var obj = itemProperty.GetValue(entity, new object[] { i });
+                if (i == 0)
+                {
+                    Type instanceType = obj.GetType();
+                    tableName = GetTableName(instanceType);
+                    propertyInfos = ReflectionHelper.GetPropertyInfos(instanceType);
+                    sqlBuilder.Append("DELETE FROM ").Append(GetSafeName(dbTypeEnum, tableName)).Append(" WHERE Id in (");
+                }
+                foreach (PropertyInfo propertyInfo in propertyInfos)
+                {
+                    object? value = propertyInfo.GetValue(obj);
+                    if (propertyInfo.Name.Equals("Id") && (value is int))
+                    {
+                        sqlBuilder.Append(value);
+                        if (i != count - 1)
+                        {
+                            sqlBuilder.Append(",");
+                        }
+                        dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name + "_" + i, value));
+                        continue;
+                    }
+                }
+            }
+            sqlBuilder.Append(")");
             return sqlBuilder.ToString();
         }
 
@@ -199,13 +258,26 @@ namespace softsunlight.orm
         /// <returns></returns>
         public static string GetSelectSql<T>(DbTypeEnum dbTypeEnum, T entity, out IList<IDbDataParameter> dbDataParameters, PageModel pageModel)
         {
+            switch (dbTypeEnum)
+            {
+                case DbTypeEnum.MySql:
+                    return GetMySqlSelectTableSql<T>(dbTypeEnum, entity, out dbDataParameters, pageModel);
+                case DbTypeEnum.SqlServer:
+                    return GetSqlServerSelectTableSql<T>(dbTypeEnum, entity, out dbDataParameters, pageModel);
+                default:
+                    return GetMySqlSelectTableSql<T>(dbTypeEnum, entity, out dbDataParameters, pageModel);
+            }
+        }
+
+        private static string GetMySqlSelectTableSql<T>(DbTypeEnum dbTypeEnum, T entity, out IList<IDbDataParameter> dbDataParameters, PageModel pageModel)
+        {
             StringBuilder sqlBuilder = new StringBuilder();
             dbDataParameters = new List<IDbDataParameter>();
             if (pageModel != null)
             {
                 if (pageModel.PageNo <= 0)
                 {
-                    pageModel.PageNo = 0;
+                    pageModel.PageNo = 1;
                 }
                 if (pageModel.PageSize <= 0 || pageModel.PageSize > 200)
                 {
@@ -232,6 +304,45 @@ namespace softsunlight.orm
             if (pageModel != null)
             {
                 sqlBuilder.Append(" limit " + (pageModel.PageNo - 1) * pageModel.PageSize + ",").Append(pageModel.PageSize);
+            }
+            return sqlBuilder.ToString();
+        }
+
+        private static string GetSqlServerSelectTableSql<T>(DbTypeEnum dbTypeEnum, T entity, out IList<IDbDataParameter> dbDataParameters, PageModel pageModel)
+        {
+            StringBuilder sqlBuilder = new StringBuilder();
+            dbDataParameters = new List<IDbDataParameter>();
+            if (pageModel != null)
+            {
+                if (pageModel.PageNo <= 0)
+                {
+                    pageModel.PageNo = 1;
+                }
+                if (pageModel.PageSize <= 0 || pageModel.PageSize > 200)
+                {
+                    pageModel.PageSize = 20;
+                }
+            }
+            Type type = typeof(T);
+            if (type.IsGenericType)
+            {
+                return sqlBuilder.ToString();
+            }
+            string tableName = GetTableName(type);
+            PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
+            sqlBuilder.Append("SELECT " + string.Join(",", propertyInfos.Select(p => GetSafeName(dbTypeEnum, p.Name))) + (pageModel != null ? ",ROW_NUMBER() OVER(ORDER BY Id ASC) AS rownum" : "") + " FROM " + GetSafeName(dbTypeEnum, tableName) + " WHERE 1=1");
+            foreach (PropertyInfo propertyInfo in propertyInfos)
+            {
+                object? value = propertyInfo.GetValue(entity);
+                if (value != null)
+                {
+                    sqlBuilder.Append(" and " + propertyInfo.Name + "=@" + propertyInfo.Name);
+                    dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name, value));
+                }
+            }
+            if (pageModel != null)
+            {
+                sqlBuilder.Append(" and (rownum >= " + ((pageModel.PageNo - 1) * pageModel.PageSize + 1) + " and rownum <= " + (pageModel.PageNo * pageModel.PageSize) + " )");
             }
             return sqlBuilder.ToString();
         }

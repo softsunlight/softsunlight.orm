@@ -61,7 +61,34 @@ namespace softsunlight.orm
 
         private static string GetSqlServerDbType(Type type)
         {
-            return "";
+            if (type == typeof(int))
+            {
+                return "INT";
+            }
+            else if (type == typeof(int))
+            {
+                return "BIGINT";
+            }
+            else if (type == typeof(float))
+            {
+                return "FLOAT";
+            }
+            else if (type == typeof(double))
+            {
+                return "DOUBLE";
+            }
+            else if (type == typeof(decimal))
+            {
+                return "DECIMAL";
+            }
+            else if (type == typeof(DateTime))
+            {
+                return "DATETIME";
+            }
+            else
+            {
+                return "VARCHAR(64)";
+            }
         }
 
         private static string GetOracleDbType(Type type)
