@@ -11,6 +11,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace softsunlight.orm
 {
@@ -203,24 +204,32 @@ namespace softsunlight.orm
             return lists;
         }
 
-        public void Get<T1, T2>(T1 entity1, T2 entity2)
-        {
+        //public IEnumerable<T3> Get<T1, T2, T3>(T1 entity1, T2 entity2)
+        //{
+        //    return Get<T3>(entity1, entity2, null);
+        //}
 
-        }
-
-        public void Get<T1, T2>(T1 entity1, T2 entity2, PageModel pageModel)
-        {
-            pageModel = new PageModel();
-        }
+        //public IEnumerable<T3> Get<T1, T2, T3>(T1 entity1, T2 entity2, PageModel pageModel)
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         public object ExecuteScalar(string sql)
         {
             return ExecuteScalar(sql, null);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sql">eg:select * from user where id={0} and name like {1}</param>
+        /// <param name="sqlParams"></param>
+        /// <returns></returns>
         public object ExecuteScalar(string sql, params object[] sqlParams)
         {
-            return 1;
+            IList<IDbDataParameter> parameters = new List<IDbDataParameter>();
+            string execSql = BuildSql(sql, out parameters, sqlParams);
+            return sqlHelper.GetScalar(execSql, parameters);
         }
 
         public IEnumerable<T> Get<T>(string sql)
@@ -230,7 +239,9 @@ namespace softsunlight.orm
 
         public IEnumerable<T> Get<T>(string sql, params object[] sqlParams)
         {
-            return (IEnumerable<T>)Activator.CreateInstance(typeof(T));
+            IList<IDbDataParameter> parameters = new List<IDbDataParameter>();
+            string execSql = BuildSql(sql, out parameters, sqlParams);
+            return ConvertToEntity.ConvertToList<T>(sqlHelper.GetDataReader(execSql, parameters));
         }
 
         public int ExecuteNoQuery(string sql)
@@ -241,14 +252,23 @@ namespace softsunlight.orm
         public int ExecuteNoQuery(string sql, params object[] sqlParams)
         {
             IList<IDbDataParameter> parameters = new List<IDbDataParameter>();
+            string execSql = BuildSql(sql, out parameters, sqlParams);
+            return sqlHelper.ExecuteNoQuery(execSql, parameters);
+        }
+
+        private string BuildSql(string sql, out IList<IDbDataParameter> parameters, params object[] sqlParams)
+        {
+            parameters = new List<IDbDataParameter>();
             if (sqlParams != null)
             {
-                foreach (object obj in sqlParams)
+                for (var i = 0; i < sqlParams.Length; i++)
                 {
-                    parameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, obj.ToString(), obj));
+                    string paramName = sqlParams[i].ToString();
+                    sql = Regex.Replace(sql, @"{\s*" + i + @"\s*}", "@" + paramName);
+                    parameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, paramName, sqlParams));
                 }
             }
-            return sqlHelper.ExecuteNoQuery(sql, parameters);
+            return sql;
         }
 
     }

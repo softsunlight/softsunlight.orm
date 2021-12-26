@@ -1,12 +1,14 @@
 ﻿using MySql.Data.MySqlClient;
 using Oracle.ManagedDataAccess.Client;
 using softsunlight.orm.Enum;
+using softsunlight.orm.Linq;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Data.SQLite;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -104,6 +106,23 @@ namespace softsunlight.orm
                     return new SQLiteParameter(paramName, value);
                 default:
                     return new MySqlParameter(paramName, value);
+            }
+        }
+
+        public static IQueryProvider GetQueryProvider(DbTypeEnum dbTypeEnum)
+        {
+            switch (dbTypeEnum)
+            {
+                case DbTypeEnum.MySql:
+                    return new MySqlQueryProvider();
+                case DbTypeEnum.SqlServer:
+                //return new SqlParameter(paramName, value);
+                case DbTypeEnum.Oracle:
+                //return new OracleParameter(paramName, value);
+                case DbTypeEnum.SQLite:
+                //return new SQLiteParameter(paramName, value);
+                default:
+                    return new MySqlQueryProvider();
             }
         }
 

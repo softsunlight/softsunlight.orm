@@ -33,7 +33,7 @@ namespace softsunlight.orm
             {
                 return "INT";
             }
-            else if (type == typeof(int))
+            else if (type == typeof(long))
             {
                 return "BIGINT";
             }
@@ -65,7 +65,7 @@ namespace softsunlight.orm
             {
                 return "INT";
             }
-            else if (type == typeof(int))
+            else if (type == typeof(long))
             {
                 return "BIGINT";
             }
