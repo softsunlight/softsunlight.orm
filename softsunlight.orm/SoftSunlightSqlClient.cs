@@ -180,12 +180,12 @@ namespace softsunlight.orm
             }
         }
 
-        public IEnumerable<T> Get<T>(T entity)
+        public IList<T> Get<T>(T entity)
         {
             return Get(entity, null);
         }
 
-        public IEnumerable<T> Get<T>(T entity, PageModel pageModel)
+        public IList<T> Get<T>(T entity, PageModel pageModel)
         {
             IList<T> lists = new List<T>();
             Type type = typeof(T);
@@ -204,12 +204,12 @@ namespace softsunlight.orm
             return lists;
         }
 
-        //public IEnumerable<T3> Get<T1, T2, T3>(T1 entity1, T2 entity2)
+        //public IList<T3> Get<T1, T2, T3>(T1 entity1, T2 entity2)
         //{
         //    return Get<T3>(entity1, entity2, null);
         //}
 
-        //public IEnumerable<T3> Get<T1, T2, T3>(T1 entity1, T2 entity2, PageModel pageModel)
+        //public IList<T3> Get<T1, T2, T3>(T1 entity1, T2 entity2, PageModel pageModel)
         //{
         //    throw new NotImplementedException();
         //}
@@ -232,12 +232,12 @@ namespace softsunlight.orm
             return sqlHelper.GetScalar(execSql, parameters);
         }
 
-        public IEnumerable<T> Get<T>(string sql)
+        public IList<T> Get<T>(string sql)
         {
             return Get<T>(sql, null);
         }
 
-        public IEnumerable<T> Get<T>(string sql, params object[] sqlParams)
+        public IList<T> Get<T>(string sql, params object[] sqlParams)
         {
             IList<IDbDataParameter> parameters = new List<IDbDataParameter>();
             string execSql = BuildSql(sql, out parameters, sqlParams);

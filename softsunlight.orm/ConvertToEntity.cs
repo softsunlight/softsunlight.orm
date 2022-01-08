@@ -60,11 +60,11 @@ namespace softsunlight.orm
             return obj;
         }
 
-        public static IEnumerable<T> ConvertToList<T>(DataTable dt)
+        public static IList<T> ConvertToList<T>(DataTable dt)
         {
             if (dt.Rows == null || dt.Rows.Count <= 0)
             {
-                return default(IEnumerable<T>);
+                return default(IList<T>);
             }
             Type type = typeof(T);
             if (type.IsGenericType)
@@ -82,11 +82,11 @@ namespace softsunlight.orm
             return lists;
         }
 
-        public static IEnumerable<T> ConvertToList<T>(DbDataReader dbDataReader)
+        public static IList<T> ConvertToList<T>(DbDataReader dbDataReader)
         {
             if (dbDataReader.HasRows)
             {
-                return default(IEnumerable<T>);
+                return default(IList<T>);
             }
             Type type = typeof(T);
             if (type.IsGenericType)
