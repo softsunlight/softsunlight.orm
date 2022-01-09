@@ -198,8 +198,8 @@ namespace softsunlight.orm
             string sql = ConvertToSql.GetSelectSql<T>(dbTypeEnum, entity, out dbDataParameters, pageModel);
             if (!string.IsNullOrEmpty(sql))
             {
-                DbDataReader dataReader = sqlHelper.GetDataReader(sql, dbDataParameters);
-                lists = ConvertToEntity.ConvertToList<T>(dataReader).ToList();
+                DataTable dt = sqlHelper.GetDataTable(sql, dbDataParameters);
+                lists = ConvertToEntity.ConvertToList<T>(dt);
             }
             return lists;
         }

@@ -27,10 +27,13 @@ namespace softsunlight.orm
             for (int i = 0; i < dt.Columns.Count; i++)
             {
                 var value = dt.Rows[0][i];
-                PropertyInfo pi = ReflectionHelper.GetPropertyInfo(type, dt.Columns[i].ColumnName);
-                if (pi != null)
+                if (!(value is DBNull))
                 {
-                    pi.SetValue(obj, value);
+                    PropertyInfo pi = ReflectionHelper.GetPropertyInfo(type, dt.Columns[i].ColumnName);
+                    if (pi != null)
+                    {
+                        pi.SetValue(obj, value);
+                    }
                 }
             }
             return obj;
@@ -51,10 +54,13 @@ namespace softsunlight.orm
             for (int i = 0; i < row.Table.Columns.Count; i++)
             {
                 var value = row[i];
-                PropertyInfo pi = ReflectionHelper.GetPropertyInfo(type, row.Table.Columns[i].ColumnName);
-                if (pi != null)
+                if (!(value is DBNull))
                 {
-                    pi.SetValue(obj, value);
+                    PropertyInfo pi = ReflectionHelper.GetPropertyInfo(type, row.Table.Columns[i].ColumnName);
+                    if (pi != null)
+                    {
+                        pi.SetValue(obj, value);
+                    }
                 }
             }
             return obj;
@@ -64,7 +70,7 @@ namespace softsunlight.orm
         {
             if (dt.Rows == null || dt.Rows.Count <= 0)
             {
-                return default(IList<T>);
+                return new List<T>();
             }
             Type type = typeof(T);
             if (type.IsGenericType)
@@ -86,7 +92,7 @@ namespace softsunlight.orm
         {
             if (dbDataReader.HasRows)
             {
-                return default(IList<T>);
+                return new List<T>();
             }
             Type type = typeof(T);
             if (type.IsGenericType)
@@ -100,11 +106,14 @@ namespace softsunlight.orm
                 for (int i = 0; i < dbDataReader.FieldCount; i++)
                 {
                     var value = dbDataReader.GetValue(i);
-                    var columnType = dbDataReader[i].GetType();
-                    PropertyInfo propertyInfo = obj.GetType().GetProperty(columnType.Name);
-                    if (propertyInfo != null)
+                    if (!(value is DBNull))
                     {
-                        propertyInfo.SetValue(obj, value);
+                        var columnType = dbDataReader[i].GetType();
+                        PropertyInfo propertyInfo = ReflectionHelper.GetPropertyInfo(type, columnType.Name);
+                        if (propertyInfo != null)
+                        {
+                            propertyInfo.SetValue(obj, value);
+                        }
                     }
                 }
                 lists.Add(obj);

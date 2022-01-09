@@ -44,7 +44,7 @@ namespace softsunlight.orm
                     continue;
                 }
 
-                if (value != null)
+                if (value != null && !IsDefaultValue(propertyInfo.PropertyType, value))
                 {
                     columnList.Add(GetSafeName(dbTypeEnum, propertyInfo.Name));
                     dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name, value));
@@ -126,26 +126,29 @@ namespace softsunlight.orm
             }
             string tableName = GetTableName(type);
             PropertyInfo[] propertyInfos = ReflectionHelper.GetPropertyInfos(type);
-
+            string whereSql = "";
             sqlBuilder.Append("UPDATE " + GetSafeName(dbTypeEnum, tableName) + " SET");
+            List<string> paramList = new List<string>();
             foreach (PropertyInfo propertyInfo in propertyInfos)
             {
                 object? value = propertyInfo.GetValue(entity);
-                Guid guid = Guid.NewGuid();
+                long tick = DateTime.Now.Ticks;
                 if (propertyInfo.Name.Equals("Id") && (value is int))
                 {
-                    sqlBuilder.Append(" WHERE Id=@Id_" + guid + ";");
-                    dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name + "_" + guid, value));
+                    whereSql = " WHERE Id=@Id_" + tick + ";";
+                    dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name + "_" + tick, value));
                 }
                 else
                 {
-                    if (value != null)
+                    if (value != null && !IsDefaultValue(propertyInfo.PropertyType, value))
                     {
-                        sqlBuilder.Append(" " + propertyInfo.Name + "=@" + propertyInfo.Name + "_" + guid);
-                        dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name + "_" + guid, value));
+                        paramList.Add(GetSafeName(dbTypeEnum, propertyInfo.Name) + "=@" + propertyInfo.Name + "_" + tick);
+                        dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name + "_" + tick, value));
                     }
                 }
             }
+            sqlBuilder.Append(" ").Append(string.Join(",", paramList));
+            sqlBuilder.Append(whereSql);
             return sqlBuilder.ToString();
         }
 
@@ -295,7 +298,7 @@ namespace softsunlight.orm
             foreach (PropertyInfo propertyInfo in propertyInfos)
             {
                 object? value = propertyInfo.GetValue(entity);
-                if (value != null)
+                if (value != null && !IsDefaultValue(propertyInfo.PropertyType, value))
                 {
                     sqlBuilder.Append(" and " + propertyInfo.Name + "=@" + propertyInfo.Name);
                     dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name, value));
@@ -334,7 +337,7 @@ namespace softsunlight.orm
             foreach (PropertyInfo propertyInfo in propertyInfos)
             {
                 object? value = propertyInfo.GetValue(entity);
-                if (value != null)
+                if (value != null && !IsDefaultValue(propertyInfo.PropertyType, value))
                 {
                     sqlBuilder.Append(" and " + propertyInfo.Name + "=@" + propertyInfo.Name);
                     dbDataParameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + propertyInfo.Name, value));
@@ -471,6 +474,59 @@ namespace softsunlight.orm
                 default:
                     return stringBuilder.Append("`").Append(name).Append("`").ToString();
             }
+        }
+
+        /// <summary>
+        /// 判断值是否为默认值
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private static bool IsDefaultValue(Type type, object? value)
+        {
+            if (type == typeof(int))
+            {
+                if ((int)value == 0)
+                {
+                    return true;
+                }
+            }
+            else if (type == typeof(long))
+            {
+                if ((long)value == 0)
+                {
+                    return true;
+                }
+            }
+            else if (type == typeof(float))
+            {
+                if ((float)value == 0)
+                {
+                    return true;
+                }
+            }
+            else if (type == typeof(double))
+            {
+                if ((double)value == 0)
+                {
+                    return true;
+                }
+            }
+            else if (type == typeof(decimal))
+            {
+                if ((decimal)value == 0)
+                {
+                    return true;
+                }
+            }
+            else if (type == typeof(DateTime))
+            {
+                if ((DateTime)value == DateTime.MinValue)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
     }

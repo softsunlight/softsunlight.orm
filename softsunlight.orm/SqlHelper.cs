@@ -56,8 +56,12 @@ namespace softsunlight.orm
                 {
                     return dataReader;
                 }
-                dbConnection.Open();
+                if (dbConnection.State != ConnectionState.Open)
+                {
+                    dbConnection.Open();
+                }
                 DbCommand dbCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
+                dbCommand.CommandText = sql;
                 dbCommand.Connection = (DbConnection)this.dbConnection;
                 if (dbDataParameters != null && dbDataParameters.Count > 0)
                 {
@@ -67,7 +71,6 @@ namespace softsunlight.orm
                 dataReader = dbCommand.ExecuteReader();
                 stopwatch.Stop();
                 Log.Write("执行Sql：" + sql + "耗时:" + stopwatch.Elapsed);
-                dbConnection.Close();
             }
             catch (Exception ex)
             {
@@ -163,7 +166,10 @@ namespace softsunlight.orm
                 {
                     return objResult;
                 }
-                dbConnection.Open();
+                if (dbConnection.State != ConnectionState.Open)
+                {
+                    dbConnection.Open();
+                }
                 DbCommand dbCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
                 dbCommand.CommandText = sql;
                 dbCommand.Connection = (DbConnection)this.dbConnection;
@@ -199,7 +205,10 @@ namespace softsunlight.orm
                 {
                     return result;
                 }
-                dbConnection.Open();
+                if (dbConnection.State != ConnectionState.Open)
+                {
+                    dbConnection.Open();
+                }
                 DbCommand dbCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
                 dbCommand.CommandText = sql;
                 dbCommand.Connection = (DbConnection)this.dbConnection;
