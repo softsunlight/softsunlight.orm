@@ -4,6 +4,8 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace softsunlight.orm.Utils
 {
@@ -22,13 +24,54 @@ namespace softsunlight.orm.Utils
         /// </summary>
         private static string fileName = DateTime.Today.ToString("yyyy-MM-dd") + "_log.txt";
 
+        private static Queue<LogContent> contentList = null;
+
+        static Log()
+        {
+            contentList = new Queue<LogContent>();
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        if (contentList.Count > 0)
+                        {
+                            var content = contentList.Peek();
+                            WriteToFile(content);
+                            contentList.Dequeue();
+                        }
+                        else
+                        {
+                            Thread.Sleep(5000);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
+                }
+            });
+        }
+
         public static void Write(string message)
         {
-            Write(message, new Exception());
+            Write(message, null);
         }
 
         public static void Write(string message, Exception ex)
         {
+            contentList.Enqueue(new LogContent() { Message = message, Ex = ex });
+        }
+
+        private static void WriteToFile(LogContent logContent)
+        {
+            if (logContent == null)
+            {
+                return;
+            }
+            string message = logContent.Message;
+            Exception ex = logContent.Ex;
             try
             {
                 if (!Directory.Exists(dir))
@@ -58,22 +101,6 @@ namespace softsunlight.orm.Utils
             }
         }
 
-        //public static void Write(string fileName, string message)
-        //{
-        //    string oldFileName = Log.fileName;
-        //    Log.fileName = fileName;
-        //    Write(message, new Exception());
-        //    Log.fileName = oldFileName;
-        //}
-
-        //public static void Write(string fileName, string message, Exception ex)
-        //{
-        //    string oldFileName = Log.fileName;
-        //    Log.fileName = fileName;
-        //    Write(message, ex);
-        //    Log.fileName = oldFileName;
-        //}
-
         private static StringBuilder GetContent(string message, Exception ex)
         {
             StringBuilder stringBuilder = new StringBuilder();
@@ -87,6 +114,12 @@ namespace softsunlight.orm.Utils
                 }
             }
             return stringBuilder;
+        }
+
+        private class LogContent
+        {
+            public string Message { get; set; }
+            public Exception Ex { get; set; }
         }
 
     }

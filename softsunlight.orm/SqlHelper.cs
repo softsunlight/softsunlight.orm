@@ -16,30 +16,29 @@ namespace softsunlight.orm
     public class SqlHelper
     {
         /// <summary>
-        /// 数据库连接类
-        /// </summary>
-        private IDbConnection dbConnection;
-
-        /// <summary>
         /// 数据库类型
         /// </summary>
         private DbTypeEnum dbTypeEnum;
 
         /// <summary>
-        /// 
+        /// 数据库连接字符串
+        /// </summary>
+        private string connectionStr;
+
+        /// <summary>
+        /// 计时信息
         /// </summary>
         private Stopwatch stopwatch;
 
         public SqlHelper(DbTypeEnum dbTypeEnum)
         {
             this.dbTypeEnum = dbTypeEnum;
-            this.dbConnection = SqlUtils.GetDbConnection(dbTypeEnum);
             this.stopwatch = new Stopwatch();
         }
 
         public void SetConnectionStr(string connectionStr)
         {
-            this.dbConnection.ConnectionString = connectionStr;
+            this.connectionStr = connectionStr;
         }
 
         public IDataReader GetDataReader(string sql)
@@ -56,13 +55,12 @@ namespace softsunlight.orm
                 {
                     return dataReader;
                 }
-                if (dbConnection.State != ConnectionState.Open)
-                {
-                    dbConnection.Open();
-                }
+                IDbConnection dbConnection = SqlUtils.GetDbConnection(this.dbTypeEnum);
+                dbConnection.ConnectionString = this.connectionStr;
+                dbConnection.Open();
                 DbCommand dbCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
                 dbCommand.CommandText = sql;
-                dbCommand.Connection = (DbConnection)this.dbConnection;
+                dbCommand.Connection = (DbConnection)dbConnection;
                 if (dbDataParameters != null && dbDataParameters.Count > 0)
                 {
                     dbCommand.Parameters.AddRange(dbDataParameters.ToArray());
@@ -97,7 +95,9 @@ namespace softsunlight.orm
                 DbDataAdapter dbDataAdapter = SqlUtils.GetDbDataAdapter(this.dbTypeEnum);
                 dbDataAdapter.SelectCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
                 dbDataAdapter.SelectCommand.CommandText = sql;
-                dbDataAdapter.SelectCommand.Connection = (DbConnection)this.dbConnection;
+                IDbConnection dbConnection = SqlUtils.GetDbConnection(this.dbTypeEnum);
+                dbConnection.ConnectionString = this.connectionStr;
+                dbDataAdapter.SelectCommand.Connection = (DbConnection)dbConnection;
                 if (dbDataParameters != null && dbDataParameters.Count > 0)
                 {
                     dbDataAdapter.SelectCommand.Parameters.AddRange(dbDataParameters.ToArray());
@@ -132,7 +132,9 @@ namespace softsunlight.orm
                 DbDataAdapter dbDataAdapter = SqlUtils.GetDbDataAdapter(this.dbTypeEnum);
                 dbDataAdapter.SelectCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
                 dbDataAdapter.SelectCommand.CommandText = sql;
-                dbDataAdapter.SelectCommand.Connection = (DbConnection)this.dbConnection;
+                IDbConnection dbConnection = SqlUtils.GetDbConnection(this.dbTypeEnum);
+                dbConnection.ConnectionString = this.connectionStr;
+                dbDataAdapter.SelectCommand.Connection = (DbConnection)dbConnection;
                 if (dbDataParameters != null && dbDataParameters.Count > 0)
                 {
                     dbDataAdapter.SelectCommand.Parameters.AddRange(dbDataParameters.ToArray());
@@ -166,13 +168,12 @@ namespace softsunlight.orm
                 {
                     return objResult;
                 }
-                if (dbConnection.State != ConnectionState.Open)
-                {
-                    dbConnection.Open();
-                }
+                IDbConnection dbConnection = SqlUtils.GetDbConnection(this.dbTypeEnum);
+                dbConnection.ConnectionString = this.connectionStr;
+                dbConnection.Open();
                 DbCommand dbCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
                 dbCommand.CommandText = sql;
-                dbCommand.Connection = (DbConnection)this.dbConnection;
+                dbCommand.Connection = (DbConnection)dbConnection;
                 if (dbDataParameters != null && dbDataParameters.Count > 0)
                 {
                     dbCommand.Parameters.AddRange(dbDataParameters.ToArray());
@@ -205,13 +206,12 @@ namespace softsunlight.orm
                 {
                     return result;
                 }
-                if (dbConnection.State != ConnectionState.Open)
-                {
-                    dbConnection.Open();
-                }
+                IDbConnection dbConnection = SqlUtils.GetDbConnection(this.dbTypeEnum);
+                dbConnection.ConnectionString = this.connectionStr;
+                dbConnection.Open();
                 DbCommand dbCommand = SqlUtils.GetDbCommand(this.dbTypeEnum);
                 dbCommand.CommandText = sql;
-                dbCommand.Connection = (DbConnection)this.dbConnection;
+                dbCommand.Connection = (DbConnection)dbConnection;
                 if (dbDataParameters != null && dbDataParameters.Count > 0)
                 {
                     dbCommand.Parameters.AddRange(dbDataParameters.ToArray());
