@@ -7,6 +7,7 @@ namespace softsunlight.orm.Attributes
     /// <summary>
     /// 为实体指定表名
     /// </summary>
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class TableAttribute : Attribute
     {
         public TableAttribute()

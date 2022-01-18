@@ -1,6 +1,8 @@
-﻿using softsunlight.orm.Enum;
+﻿using softsunlight.orm.Attributes;
+using softsunlight.orm.Enum;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace softsunlight.orm
@@ -10,48 +12,61 @@ namespace softsunlight.orm
     /// </summary>
     public class NetTypeConvertDbType
     {
-        public static string GetDbType(DbTypeEnum dbTypeEnum, Type type)
+        public static string GetDbType(DbTypeEnum dbTypeEnum, PropertyInfo propertyInfo)
         {
             switch (dbTypeEnum)
             {
                 case DbTypeEnum.MySql:
-                    return GetMySqlDbType(type);
+                    return GetMySqlDbType(propertyInfo);
                 case DbTypeEnum.SqlServer:
-                    return GetSqlServerDbType(type);
+                    return GetSqlServerDbType(propertyInfo);
                 case DbTypeEnum.Oracle:
-                    return GetOracleDbType(type);
+                    return GetOracleDbType(propertyInfo);
                 case DbTypeEnum.SQLite:
-                    return GetSQLiteDbType(type);
+                    return GetSQLiteDbType(propertyInfo);
                 default:
-                    return GetMySqlDbType(type);
+                    return GetMySqlDbType(propertyInfo);
             }
         }
 
-        private static string GetMySqlDbType(Type type)
+        private static string GetMySqlDbType(PropertyInfo propertyInfo)
         {
-            if (type == typeof(int))
+            if (propertyInfo.PropertyType == typeof(int))
             {
                 return "INT";
             }
-            else if (type == typeof(long))
+            else if (propertyInfo.PropertyType == typeof(long))
             {
                 return "BIGINT";
             }
-            else if (type == typeof(float))
+            else if (propertyInfo.PropertyType == typeof(float))
             {
                 return "FLOAT";
             }
-            else if (type == typeof(double))
+            else if (propertyInfo.PropertyType == typeof(double))
             {
                 return "DOUBLE";
             }
-            else if (type == typeof(decimal))
+            else if (propertyInfo.PropertyType == typeof(decimal))
             {
                 return "DECIMAL";
             }
-            else if (type == typeof(DateTime))
+            else if (propertyInfo.PropertyType == typeof(DateTime))
             {
                 return "DATETIME";
+            }
+            else if (propertyInfo.PropertyType == typeof(string))
+            {
+                Type type = propertyInfo.GetType();
+                StringLengthAttribute stringLengthAttribute = (StringLengthAttribute)type.GetCustomAttribute(typeof(StringLengthAttribute));
+                if (stringLengthAttribute != null)
+                {
+                    if (stringLengthAttribute.Length > 0)
+                    {
+                        return "VARCHAR(" + stringLengthAttribute.Length + ")";
+                    }
+                }
+                return "VARCHAR(64)";
             }
             else
             {
@@ -59,31 +74,44 @@ namespace softsunlight.orm
             }
         }
 
-        private static string GetSqlServerDbType(Type type)
+        private static string GetSqlServerDbType(PropertyInfo propertyInfo)
         {
-            if (type == typeof(int))
+            if (propertyInfo.PropertyType == typeof(int))
             {
                 return "INT";
             }
-            else if (type == typeof(long))
+            else if (propertyInfo.PropertyType == typeof(long))
             {
                 return "BIGINT";
             }
-            else if (type == typeof(float))
+            else if (propertyInfo.PropertyType == typeof(float))
             {
                 return "FLOAT";
             }
-            else if (type == typeof(double))
+            else if (propertyInfo.PropertyType == typeof(double))
             {
                 return "DOUBLE";
             }
-            else if (type == typeof(decimal))
+            else if (propertyInfo.PropertyType == typeof(decimal))
             {
                 return "DECIMAL";
             }
-            else if (type == typeof(DateTime))
+            else if (propertyInfo.PropertyType == typeof(DateTime))
             {
                 return "DATETIME";
+            }
+            else if (propertyInfo.PropertyType == typeof(string))
+            {
+                Type type = propertyInfo.GetType();
+                StringLengthAttribute stringLengthAttribute = (StringLengthAttribute)type.GetCustomAttribute(typeof(StringLengthAttribute));
+                if (stringLengthAttribute != null)
+                {
+                    if (stringLengthAttribute.Length > 0)
+                    {
+                        return "VARCHAR(" + stringLengthAttribute.Length + ")";
+                    }
+                }
+                return "VARCHAR(64)";
             }
             else
             {
@@ -91,14 +119,14 @@ namespace softsunlight.orm
             }
         }
 
-        private static string GetOracleDbType(Type type)
+        private static string GetOracleDbType(PropertyInfo propertyInfo)
         {
-            return "";
+            throw new NotImplementedException();
         }
 
-        private static string GetSQLiteDbType(Type type)
+        private static string GetSQLiteDbType(PropertyInfo propertyInfo)
         {
-            return "";
+            throw new NotImplementedException();
         }
 
     }

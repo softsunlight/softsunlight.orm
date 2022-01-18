@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -13,12 +14,16 @@ namespace softsunlight.orm
         /// <summary>
         /// 缓存类型全名和属性
         /// </summary>
-        private static Dictionary<string, PropertyInfo[]> type2Properties = new Dictionary<string, PropertyInfo[]>();
+        private static ConcurrentDictionary<string, PropertyInfo[]> type2Properties = new ConcurrentDictionary<string, PropertyInfo[]>();
+
+        private static readonly object type2PropertiesLockObj = new object();
 
         /// <summary>
         /// 缓存类型属性，按属性名获取PropertyInfo
         /// </summary>
-        private static Dictionary<string, Dictionary<string, PropertyInfo>> typePropertyName2Properties = new Dictionary<string, Dictionary<string, PropertyInfo>>();
+        private static ConcurrentDictionary<string, ConcurrentDictionary<string, PropertyInfo>> typePropertyName2Properties = new ConcurrentDictionary<string, ConcurrentDictionary<string, PropertyInfo>>();
+
+        private static readonly object typePropertyName2PropertiesLockObj = new object();
 
         /// <summary>
         /// 获取类型属性
@@ -27,13 +32,16 @@ namespace softsunlight.orm
         /// <returns></returns>
         public static PropertyInfo[] GetPropertyInfos(Type type)
         {
-            if (type2Properties.ContainsKey(type.FullName))
+            lock (type2PropertiesLockObj)
             {
-                return type2Properties[type.FullName];
+                if (type2Properties.ContainsKey(type.FullName))
+                {
+                    return type2Properties[type.FullName];
+                }
+                PropertyInfo[] propertyInfos = type.GetProperties();
+                type2Properties[type.FullName] = propertyInfos;
             }
-            PropertyInfo[] propertyInfos = type.GetProperties();
-            type2Properties[type.FullName] = propertyInfos;
-            return propertyInfos;
+            return type2Properties[type.FullName];
         }
 
         /// <summary>
@@ -44,13 +52,16 @@ namespace softsunlight.orm
         /// <returns></returns>
         public static PropertyInfo GetPropertyInfo(Type type, string propertyName)
         {
-            if (!typePropertyName2Properties.ContainsKey(type.FullName))
+            lock (typePropertyName2PropertiesLockObj)
             {
-                typePropertyName2Properties[type.FullName] = new Dictionary<string, PropertyInfo>();
-            }
-            if (!typePropertyName2Properties[type.FullName].ContainsKey(propertyName))
-            {
-                typePropertyName2Properties[type.FullName][propertyName] = type.GetProperty(propertyName);
+                if (!typePropertyName2Properties.ContainsKey(type.FullName))
+                {
+                    typePropertyName2Properties[type.FullName] = new ConcurrentDictionary<string, PropertyInfo>();
+                }
+                if (!typePropertyName2Properties[type.FullName].ContainsKey(propertyName))
+                {
+                    typePropertyName2Properties[type.FullName][propertyName] = type.GetProperty(propertyName);
+                }
             }
             return typePropertyName2Properties[type.FullName][propertyName];
         }

@@ -407,7 +407,7 @@ namespace softsunlight.orm
             {
                 if (propertyInfo.Name.Equals("Id", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    sqlBuilder.Append("\t").Append(GetSafeName(DbTypeEnum.MySql, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(DbTypeEnum.MySql, propertyInfo.PropertyType));
+                    sqlBuilder.Append("\t").Append(GetSafeName(DbTypeEnum.MySql, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(DbTypeEnum.MySql, propertyInfo));
                     if (propertyInfo.PropertyType == typeof(int) || propertyInfo.PropertyType == typeof(long))
                     {
                         sqlBuilder.Append(" AUTO_INCREMENT,");
@@ -417,7 +417,7 @@ namespace softsunlight.orm
                 }
                 else
                 {
-                    sqlBuilder.Append("\t").Append(GetSafeName(DbTypeEnum.MySql, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(DbTypeEnum.MySql, propertyInfo.PropertyType)).Append(",").Append(Environment.NewLine);
+                    sqlBuilder.Append("\t").Append(GetSafeName(DbTypeEnum.MySql, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(DbTypeEnum.MySql, propertyInfo)).Append(",").Append(Environment.NewLine);
                 }
             }
             sqlBuilder.Append(primaryKey).Append(Environment.NewLine);
@@ -441,7 +441,7 @@ namespace softsunlight.orm
             {
                 if (propertyInfo.Name.Equals("Id", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    sqlBuilder.Append("\t").Append(GetSafeName(DbTypeEnum.SqlServer, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(DbTypeEnum.SqlServer, propertyInfo.PropertyType)).Append(" PRIMARY KEY");
+                    sqlBuilder.Append("\t").Append(GetSafeName(DbTypeEnum.SqlServer, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(DbTypeEnum.SqlServer, propertyInfo)).Append(" PRIMARY KEY");
                     if (propertyInfo.PropertyType == typeof(int) || propertyInfo.PropertyType == typeof(long))
                     {
                         sqlBuilder.Append(" IDENTITY (1, 1),");
@@ -450,7 +450,7 @@ namespace softsunlight.orm
                 }
                 else
                 {
-                    sqlBuilder.Append("\t").Append(GetSafeName(DbTypeEnum.SqlServer, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(DbTypeEnum.SqlServer, propertyInfo.PropertyType)).Append(",").Append(Environment.NewLine);
+                    sqlBuilder.Append("\t").Append(GetSafeName(DbTypeEnum.SqlServer, propertyInfo.Name)).Append(" ").Append(NetTypeConvertDbType.GetDbType(DbTypeEnum.SqlServer, propertyInfo)).Append(",").Append(Environment.NewLine);
                 }
             }
             sqlBuilder.Append(primaryKey).Append(Environment.NewLine);

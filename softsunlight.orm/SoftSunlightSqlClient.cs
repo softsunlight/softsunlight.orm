@@ -38,8 +38,7 @@ namespace softsunlight.orm
         public SoftSunlightSqlClient(DbTypeEnum dbTypeEnum, string connectionStr)
         {
             this.dbTypeEnum = dbTypeEnum;
-            sqlHelper = new SqlHelper(dbTypeEnum);
-            sqlHelper.SetConnectionStr(connectionStr);
+            sqlHelper = new SqlHelper(dbTypeEnum, connectionStr);
         }
 
         /// <summary>
@@ -263,9 +262,9 @@ namespace softsunlight.orm
             {
                 for (var i = 0; i < sqlParams.Length; i++)
                 {
-                    string paramName = sqlParams[i].ToString();
-                    sql = Regex.Replace(sql, @"{\s*" + i + @"\s*}", "@" + paramName);
-                    parameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, paramName, sqlParams));
+                    long ticks = DateTime.Now.Ticks;
+                    sql = Regex.Replace(sql, @"{\s*" + i + @"\s*}", "@" + ticks);
+                    parameters.Add(SqlUtils.GetDbDataParameter(dbTypeEnum, "@" + ticks, sqlParams[i]));
                 }
             }
             return sql;

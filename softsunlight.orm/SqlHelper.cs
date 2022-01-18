@@ -30,15 +30,11 @@ namespace softsunlight.orm
         /// </summary>
         private Stopwatch stopwatch;
 
-        public SqlHelper(DbTypeEnum dbTypeEnum)
+        public SqlHelper(DbTypeEnum dbTypeEnum, string connectionStr)
         {
             this.dbTypeEnum = dbTypeEnum;
-            this.stopwatch = new Stopwatch();
-        }
-
-        public void SetConnectionStr(string connectionStr)
-        {
             this.connectionStr = connectionStr;
+            this.stopwatch = new Stopwatch();
         }
 
         public IDataReader GetDataReader(string sql)

@@ -14,21 +14,21 @@ namespace softsunlight.orm.tests
             //自定义orm框架测试
 
             //API
-            var db = new SoftSunlightSqlClient(DbTypeEnum.MySql, "Server=127.0.0.1;Database=test;uid=root;pwd=123456;Charset=utf8;SslMode = none;");
+            var db = new SoftSunlightSqlClient(DbTypeEnum.MySql, "Server=127.0.0.1;Database=test;uid=root;pwd=123456;Charset=utf8;SslMode=none;");
             //var db = new SoftSunlightSqlClient(DbTypeEnum.SqlServer, "Data Source=.;Initial Catalog=testDB;Integrated Security=SSPI;");
-            for (int i = 0; i < 10; i++)
-            {
-                Task.Run(() =>
-                {
-                    Log.Write(ReflectionHelper.GetPropertyInfo(typeof(Person), "Age").ToString());
-                    //db.Get(new Person() { Id = 1 });
-                });
-            }
-            Console.Read();
+            //for (int i = 0; i < 10; i++)
+            //{
+            //    Task.Run(() =>
+            //    {
+            //        Log.Write(ReflectionHelper.GetPropertyInfo(typeof(Person), "Age").ToString());
+            //        //db.Get(new Person() { Id = 1 });
+            //    });
+            //}
+            //Console.Read();
             //var db = new SoftSunlightSqlClient(DbTypeEnum.SqlServer, "Data Source=.;Initial Catalog=testDB;Integrated Security=SSPI;");
             //string sql = ConvertToSql.GetCreateTableSql<Person>(DbTypeEnum.MySql);
             //db.ExecuteNoQuery(sql);
-            //db.Add(new Person() { Name = "wyb", Age = 26 });
+            db.Add(new Person() { Name = "wyb", Age = 26 });
             //db.Add(new List<Person>() { new Person() { Name = "wyb", Age = 26 } });
             //List<Person> personList = new List<Person>();
             //for (int i = 0; i < 500000; i++)
@@ -51,16 +51,16 @@ namespace softsunlight.orm.tests
             ////执行自定义sql
             //object objResult = db.Get("");
             //IEnumerable<Person> lists = db.Get<Person>("");
-            //int result = db.ExecuteNoQuery("");//执行增加、删除、更新语句
+            int result = db.ExecuteNoQuery("select count(0) from person where id={0}", 1);//执行增加、删除、更新语句
         }
     }
 
     class Person
     {
-        public int Id { get; set; }
+        public int? Id { get; set; }
         public string Name { get; set; }
-        public int Age { get; set; }
-        public DateTime CreateTime { get; set; }
+        public int? Age { get; set; }
+        public DateTime? CreateTime { get; set; }
     }
 
     class Course
