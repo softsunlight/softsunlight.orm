@@ -11,19 +11,19 @@ namespace softsunlight.orm.Linq
     public class DbQuery<T> : IQueryable<T>, IQueryable
     {
 
-        private DbTypeEnum dbTypeEnum;
+        private SqlHelper sqlHelper;
 
         private Expression expression;
 
-        public DbQuery(DbTypeEnum dbTypeEnum)
+        public DbQuery(SqlHelper sqlHelper)
         {
-            this.dbTypeEnum = dbTypeEnum;
+            this.sqlHelper = sqlHelper;
             this.expression = Expression.Constant(this);
         }
 
-        public DbQuery(DbTypeEnum dbTypeEnum, Expression expression)
+        public DbQuery(SqlHelper sqlHelper, Expression expression)
         {
-            this.dbTypeEnum = dbTypeEnum;
+            this.sqlHelper = sqlHelper;
             this.expression = expression;
         }
 
@@ -31,7 +31,7 @@ namespace softsunlight.orm.Linq
 
         public Expression Expression => this.expression;
 
-        public IQueryProvider Provider => SqlUtils.GetQueryProvider(dbTypeEnum);
+        public IQueryProvider Provider => SqlUtils.GetQueryProvider(this.sqlHelper);
 
         public IEnumerator<T> GetEnumerator()
         {

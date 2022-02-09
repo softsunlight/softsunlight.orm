@@ -109,12 +109,12 @@ namespace softsunlight.orm
             }
         }
 
-        public static IQueryProvider GetQueryProvider(DbTypeEnum dbTypeEnum)
+        public static IQueryProvider GetQueryProvider(SqlHelper sqlHelper)
         {
-            switch (dbTypeEnum)
+            switch (sqlHelper.DbTypeEnum)
             {
                 case DbTypeEnum.MySql:
-                    return new MySqlQueryProvider();
+                    return new MySqlQueryProvider(sqlHelper);
                 case DbTypeEnum.SqlServer:
                 //return new SqlParameter(paramName, value);
                 case DbTypeEnum.Oracle:
@@ -122,7 +122,7 @@ namespace softsunlight.orm
                 case DbTypeEnum.SQLite:
                 //return new SQLiteParameter(paramName, value);
                 default:
-                    return new MySqlQueryProvider();
+                    return new MySqlQueryProvider(sqlHelper);
             }
         }
 

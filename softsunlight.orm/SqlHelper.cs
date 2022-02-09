@@ -30,6 +30,12 @@ namespace softsunlight.orm
         /// </summary>
         private Stopwatch stopwatch;
 
+        public DbTypeEnum DbTypeEnum
+        {
+            private set { dbTypeEnum = value; }
+            get { return dbTypeEnum; }
+        }
+
         public SqlHelper(DbTypeEnum dbTypeEnum, string connectionStr)
         {
             this.dbTypeEnum = dbTypeEnum;

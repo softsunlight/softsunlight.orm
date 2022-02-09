@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using softsunlight.orm.Attributes;
 using softsunlight.orm.Enum;
+using softsunlight.orm.Linq;
 using softsunlight.orm.Utils;
 using System;
 using System.Collections.Generic;
@@ -179,28 +180,38 @@ namespace softsunlight.orm
             }
         }
 
-        public IList<T> Get<T>(T entity)
-        {
-            return Get(entity, null);
-        }
+        //public IList<T> Get<T>(T entity)
+        //{
+        //    return Get(entity, null);
+        //}
 
-        public IList<T> Get<T>(T entity, PageModel pageModel)
+        //public IList<T> Get<T>(T entity, PageModel pageModel)
+        //{
+        //    IList<T> lists = new List<T>();
+        //    Type type = typeof(T);
+        //    if (type.IsGenericType)
+        //    {
+        //        throw new Exception("参数entity不能是泛型集合");
+        //    }
+        //    //非泛型类
+        //    IList<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
+        //    string sql = ConvertToSql.GetSelectSql<T>(dbTypeEnum, entity, out dbDataParameters, pageModel);
+        //    if (!string.IsNullOrEmpty(sql))
+        //    {
+        //        DataTable dt = sqlHelper.GetDataTable(sql, dbDataParameters);
+        //        lists = ConvertToEntity.ConvertToList<T>(dt);
+        //    }
+        //    return lists;
+        //}
+
+        /// <summary>
+        /// 查询
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public DbQuery<T> Query<T>()
         {
-            IList<T> lists = new List<T>();
-            Type type = typeof(T);
-            if (type.IsGenericType)
-            {
-                throw new Exception("参数entity不能是泛型集合");
-            }
-            //非泛型类
-            IList<IDbDataParameter> dbDataParameters = new List<IDbDataParameter>();
-            string sql = ConvertToSql.GetSelectSql<T>(dbTypeEnum, entity, out dbDataParameters, pageModel);
-            if (!string.IsNullOrEmpty(sql))
-            {
-                DataTable dt = sqlHelper.GetDataTable(sql, dbDataParameters);
-                lists = ConvertToEntity.ConvertToList<T>(dt);
-            }
-            return lists;
+            return new DbQuery<T>(sqlHelper);
         }
 
         //public IList<T3> Get<T1, T2, T3>(T1 entity1, T2 entity2)
