@@ -33,7 +33,18 @@ namespace softsunlight.orm.Linq
             MySqlExpressionVisitor mySqlExpressionVisitor = new MySqlExpressionVisitor();
             mySqlExpressionVisitor.Visit(expression);
             string sql = mySqlExpressionVisitor.SqlBuilder.ToString();
-            return Activator.CreateInstance(typeof(ObjectReader<>).MakeGenericType(expression.Type.GenericTypeArguments[0]), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic, null, new object[] { this.sqlHelper.GetDataTable(sql) }, null);
+            if (expression.Type == typeof(int))
+            {
+                return Convert.ToInt32(this.sqlHelper.GetScalar(sql));
+            }
+            else if (expression.Type == typeof(bool))
+            {
+                return Convert.ToInt32(this.sqlHelper.GetScalar(sql)) > 0;
+            }
+            else
+            {
+                return Activator.CreateInstance(typeof(ObjectReader<>).MakeGenericType(expression.Type.GenericTypeArguments[0]), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic, null, new object[] { this.sqlHelper.GetDataTable(sql) }, null);
+            }
         }
 
         public TResult Execute<TResult>(Expression expression)

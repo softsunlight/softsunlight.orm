@@ -32,18 +32,29 @@ namespace softsunlight.orm.tests
             //db.ExecuteNoQuery(sql);
             //db.Add(new Person() { Name = "wyb", Age = 26 });
             //db.Add(new List<Person>() { new Person() { Name = "wyb", Age = 26 } });
-            List<Person> personList = new List<Person>();
-            for (int i = 0; i < 500000; i++)
-            {
-                personList.Add(new Person() { Name = "wyb_" + i, Age = 16 + i });
-            }
+            //List<Person> personList = new List<Person>();
+            //for (int i = 0; i < 500000; i++)
+            //{
+            //    personList.Add(new Person() { Name = "wyb_" + i, Age = 16 + i });
+            //}
 
-            db.Add(personList);
+            //db.Add(personList);
 
-            var queryResult = db.Query<Person>().Where(p => p.Id == 1);
+            //var queryResult = db.Query<Person>().Where(p => p.Id == 1);
+            //foreach (var item in queryResult)
+            //{
+            //    Console.WriteLine(item.Name);
+            //}
+            //var queryResult = db.Query<Person>().Count(p => p.Age == 5);
+            //var queryResult = db.Query<Person>().Count();
+            //Console.WriteLine(queryResult);
+            //string str = "aa";
+            //var queryResult = db.Query<Person>().All(p => p.Name.Contains("aa"));
+            var str = "连衣裙";
+            var queryResult = db.Query<MoguItem>().Where(p => p.Title.Contains(str));
             foreach (var item in queryResult)
             {
-                Console.WriteLine(item.Name);
+                Console.WriteLine(item.Title);
             }
 
             //db.Delete(new Person());
@@ -61,6 +72,8 @@ namespace softsunlight.orm.tests
             //object objResult = db.Get("");
             //IEnumerable<Person> lists = db.Get<Person>("");
             //int result = db.ExecuteNoQuery("select count(0) from person where id={0}", 1);//执行增加、删除、更新语句
+
+            Console.ReadLine();
         }
     }
 
@@ -75,6 +88,24 @@ namespace softsunlight.orm.tests
     class Course
     {
 
+    }
+
+    /// <summary>
+    /// 蘑菇街商品
+    /// </summary>
+    class MoguItem
+    {
+        public int? Id { get; set; }
+        public string ShopId { get; set; }
+        public string ItemId { get; set; }
+        public string Title { get; set; }
+        public string Desc { get; set; }
+        public decimal? LowPrice { get; set; }
+        public decimal? LowNowPrice { get; set; }
+        public decimal? HighPrice { get; set; }
+        public decimal? HighNowPrice { get; set; }
+        public DateTime? CreateTime { get; set; }
+        public DateTime? ModifyTime { get; set; }
     }
 
 }
