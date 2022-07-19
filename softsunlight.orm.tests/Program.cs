@@ -15,9 +15,9 @@ namespace softsunlight.orm.tests
             //自定义orm框架测试
 
             //API
-            var db = new SoftSunlightSqlClient(DbTypeEnum.MySql, "Server=127.0.0.1;Database=test;uid=root;pwd=123456;Charset=utf8;SslMode=none;");
+            //var db = new SoftSunlightSqlClient(DbTypeEnum.MySql, "Server=127.0.0.1;Database=test;uid=root;pwd=123456;Charset=utf8;SslMode=none;");
 
-            //var db = new SoftSunlightSqlClient(DbTypeEnum.SqlServer, "Data Source=.;Initial Catalog=testDB;Integrated Security=SSPI;");
+            var db = new SoftSunlightSqlClient(DbTypeEnum.SqlServer, "Data Source=.;Initial Catalog=testDB;Integrated Security=SSPI;");
             //for (int i = 0; i < 10; i++)
             //{
             //    Task.Run(() =>
@@ -51,10 +51,12 @@ namespace softsunlight.orm.tests
             //string str = "aa";
             //var queryResult = db.Query<Person>().All(p => p.Name.Contains("aa"));
             var str = "连衣裙";
-            var queryResult = db.Query<MoguItem>().Where(p => p.Title.Contains(str));
+            //var queryResult = db.Query<MoguItem>().Where(p => p.Title.Contains("连衣裙"));
+            var queryResult = db.Query<Person>().Where(p => p.Name.Contains("连衣裙")).Where(p => p.Age == 1);
+            //Console.WriteLine(queryResult);
             foreach (var item in queryResult)
             {
-                Console.WriteLine(item.Title);
+                //Console.WriteLine(item.Title);
             }
 
             //db.Delete(new Person());

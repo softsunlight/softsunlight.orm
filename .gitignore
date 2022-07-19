@@ -8,3 +8,7 @@
 /softsunlight.orm.tests/bin/Debug/netcoreapp3.0
 /softsunlight.orm.tests/obj
 /softsunlight.orm/bin/Debug
+/ef.demo/bin/Debug/netcoreapp3.1
+/ef.demo/obj
+/softsunlight.orm/bin/Release/netcoreapp3.0
+/softsunlight.orm.tests/bin/Debug/netcoreapp3.1

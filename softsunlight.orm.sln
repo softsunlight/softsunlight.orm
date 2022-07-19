@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30621.155
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "softsunlight.orm", "softsunlight.orm\softsunlight.orm.csproj", "{87FAFB45-7E0B-42CB-B493-6B817CF9DAB5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "softsunlight.orm", "softsunlight.orm\softsunlight.orm.csproj", "{87FAFB45-7E0B-42CB-B493-6B817CF9DAB5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "softsunlight.orm.tests", "softsunlight.orm.tests\softsunlight.orm.tests.csproj", "{8EDB8F47-7AF5-4C4A-8AF8-8A768D290E69}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "softsunlight.orm.tests", "softsunlight.orm.tests\softsunlight.orm.tests.csproj", "{8EDB8F47-7AF5-4C4A-8AF8-8A768D290E69}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ef.demo", "ef.demo\ef.demo.csproj", "{00B3CEDF-C6B0-47D4-8E43-6DFC78F91E5E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{8EDB8F47-7AF5-4C4A-8AF8-8A768D290E69}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EDB8F47-7AF5-4C4A-8AF8-8A768D290E69}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EDB8F47-7AF5-4C4A-8AF8-8A768D290E69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00B3CEDF-C6B0-47D4-8E43-6DFC78F91E5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00B3CEDF-C6B0-47D4-8E43-6DFC78F91E5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00B3CEDF-C6B0-47D4-8E43-6DFC78F91E5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00B3CEDF-C6B0-47D4-8E43-6DFC78F91E5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -62,16 +62,26 @@ namespace softsunlight.orm.Linq
                 SqlBuilder.Append("select * from ");
                 SqlBuilder.Append(node.Arguments[0].Type.GenericTypeArguments[0].Name);
                 SqlBuilder.Append(" where ");
-                this.Visit(node.Arguments[1]);
+                foreach (var item in node.Arguments)
+                {
+                    if (item.Type.Name != typeof(DbQuery<>).Name)
+                    {
+                        this.Visit(item);
+                    }
+                }
+                //this.Visit(node.Arguments[1]);
             }
             else if (node.Method.Name == "Count")
             {
                 SqlBuilder.Append("select count(0) from ");
                 SqlBuilder.Append(node.Arguments[0].Type.GenericTypeArguments[0].Name);
-                if (node.Arguments.Count > 1)
+                foreach (var arg in node.Arguments)
                 {
-                    SqlBuilder.Append(" where ");
-                    this.Visit(node.Arguments[1]);
+                    if (arg.Type.Name != typeof(DbQuery<>).Name)
+                    {
+                        SqlBuilder.Append(" where ");
+                        this.Visit(arg);
+                    }
                 }
             }
             else if (node.Method.Name == "Contains")
@@ -113,16 +123,17 @@ namespace softsunlight.orm.Linq
 
         protected override Expression VisitConstant(ConstantExpression node)
         {
-            var fields = node.GetType().GetFields();
-            object val = null;
-            if (fields.Length > 0)
-            {
-                val = fields[0].GetValue(node.Value);
-            }
-            else
-            {
-                val = node.Value;
-            }
+            //var fields = node.GetType().GetFields();
+            //object val = null;
+            //if (fields.Length > 0)
+            //{
+            //    val = fields[0].GetValue(node.Value);
+            //}
+            //else
+            //{
+            //    val = node.Value;
+            //}
+            var val = node.Value;
             if (val is string)
             {
                 if (SqlBuilder[SqlBuilder.Length - 1] == '%')
@@ -151,7 +162,10 @@ namespace softsunlight.orm.Linq
         {
             if (node.Expression.NodeType == ExpressionType.Constant)
             {
-                this.Visit(node.Expression);
+                //得到本地变量的值
+                LambdaExpression lambda = Expression.Lambda(node);
+                Delegate fn = lambda.Compile();
+                this.Visit(Expression.Constant(fn.DynamicInvoke(null), node.Type));
             }
             else
             {
